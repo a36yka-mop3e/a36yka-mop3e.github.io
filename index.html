@@ -194,7 +194,10 @@ main { position: relative; z-index: 1; }
 .chat-input .send svg { width: 16px; height: 16px; }
 
 /* ---------- бегущая строка ---------- */
-.ticker { position: relative; padding: 19px 0; overflow: hidden; background: var(--ticker-bg); }
+.ticker { position: relative; padding: 19px 0; overflow: hidden; background: var(--ticker-bg); touch-action: pan-y; user-select: none; cursor: grab; }
+.ticker.is-dragging { cursor: grabbing; }
+/* по умолчанию крутится css-анимацией; main.js выключает её и ведёт строку сам, чтобы её можно было крутануть рукой */
+.js .ticker-track { animation: none; will-change: transform; }
 /* тонкие жёлто-чёрные полосы по краям, единственная прямая цитата бамблби */
 .ticker::before, .ticker::after { content: ''; position: absolute; left: 0; right: 0; height: 6px; background: repeating-linear-gradient(-45deg, var(--accent) 0 14px, var(--ink) 14px 28px); }
 .ticker::before { top: 0; }
@@ -1184,6 +1187,62 @@ main { position: relative; z-index: 1; }
         }
       })();
     });
+  }
+
+  /* ---------- бегущая строка: едет сама, но её можно схватить и крутануть ----------
+     скорость после рывка плавно возвращается к обычной; крутанул против хода - затормозит,
+     встанет и снова поедет как обычно */
+  var ticker = $('.ticker');
+  var track = ticker && $('.ticker-track', ticker);
+  if (track && !reduced) {
+    var BASE = 42;        /* обычная скорость, px в секунду */
+    var RELAX = 1.4;      /* за сколько секунд рывок «остывает» примерно на две трети */
+    var MAX_V = 5000;     /* быстрее этого не разгоняется */
+    var tk = { x: 0, v: BASE, half: 0, drag: false, px: 0, pt: 0, fv: 0, last: 0 };
+    function measure() { tk.half = track.scrollWidth / 2; }
+    measure();
+    window.addEventListener('resize', measure);
+    function place() {
+      if (tk.half > 0) tk.x = ((tk.x % tk.half) + tk.half) % tk.half;
+      track.style.transform = 'translate3d(' + (-tk.x).toFixed(2) + 'px,0,0)';
+    }
+    function frame(now) {
+      var dt = Math.min(50, now - (tk.last || now)) / 1000;
+      tk.last = now;
+      if (!tk.drag) {
+        tk.v += (BASE - tk.v) * (1 - Math.exp(-dt / RELAX));
+        tk.x += tk.v * dt;
+        place();
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+    ticker.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0) return;
+      tk.drag = true; tk.px = e.clientX; tk.pt = e.timeStamp; tk.fv = 0;
+      ticker.classList.add('is-dragging');
+      try { ticker.setPointerCapture(e.pointerId); } catch (err) {}
+      e.preventDefault();
+    });
+    ticker.addEventListener('pointermove', function (e) {
+      if (!tk.drag) return;
+      var dx = e.clientX - tk.px, dt = (e.timeStamp - tk.pt) / 1000;
+      tk.x -= dx;
+      if (dt > 0) tk.fv = tk.fv * .4 + (-dx / dt) * .6;
+      tk.px = e.clientX; tk.pt = e.timeStamp;
+      place();
+    });
+    function letGo(e) {
+      if (!tk.drag) return;
+      tk.drag = false;
+      ticker.classList.remove('is-dragging');
+      try { ticker.releasePointerCapture(e.pointerId); } catch (err) {}
+      var stale = e.timeStamp - tk.pt > 120; /* держал и отпустил без рывка */
+      tk.v = stale ? 0 : Math.max(-MAX_V, Math.min(MAX_V, tk.fv));
+    }
+    ticker.addEventListener('pointerup', letGo);
+    ticker.addEventListener('pointercancel', letGo);
+    ticker.addEventListener('lostpointercapture', letGo);
   }
 
   /* ---------- появление блоков при прокрутке ---------- */

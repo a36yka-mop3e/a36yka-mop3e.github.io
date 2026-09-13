@@ -79,11 +79,14 @@ p, ul, dl { margin: 0; }
 [hidden] { display: none !important; }
 
 .container { width: min(var(--container), 100% - 2 * var(--gutter)); margin-inline: auto; }
+main { position: relative; z-index: 1; }
 
 /* ---------- фон: пятно света за курсором и зерно бумаги (слои создаёт main.js) ---------- */
 /* пятно - готовый круг, который ездит по экрану сдвигом (transform), а не перерисовывается на каждое движение:
    иначе хром рисует его кусками и на скринах ловятся рваные прямоугольные края */
-.bg-spot { position: fixed; left: -640px; top: -640px; width: 1280px; height: 1280px; z-index: -1; pointer-events: none; will-change: transform; transform: translate3d(78vw, 16vh, 0); transition: transform .35s var(--ease); background: radial-gradient(circle closest-side, color-mix(in srgb, var(--accent) 28%, transparent), transparent 62%); }
+/* слой 0, а не -1: с отрицательным слоем хром на некоторых машинах обрезал свечение по границам колонки с наклонённым
+   заголовком (проверено в хроме Ромы 13.09). Содержимое страницы поднято над пятном через main { z-index: 1 } */
+.bg-spot { position: fixed; left: -640px; top: -640px; width: 1280px; height: 1280px; z-index: 0; pointer-events: none; will-change: transform; transform: translate3d(78vw, 16vh, 0); transition: transform .35s var(--ease); background: radial-gradient(circle closest-side, color-mix(in srgb, var(--accent) 28%, transparent), transparent 62%); }
 .bg-grain { position: fixed; inset: 0; z-index: 60; pointer-events: none; opacity: .16; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .45 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
 /* колонки сеток не должны распирать страницу шире экрана */
 .hero-grid > *, .calc > *, .ready > *, .contact > *, .honest > *, .quotes > *, .cases > *, .svc-grid > * { min-width: 0; }

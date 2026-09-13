@@ -151,12 +151,14 @@ main { position: relative; z-index: 1; }
    а после выезда (класс is-in ставит main.js) обрезка снимается совсем - иначе при подъёме на наведении режется верх */
 .hero h1 .w { display: inline-block; overflow: hidden; vertical-align: top; padding: .12em .08em .2em; margin: -.12em -.08em -.2em; }
 .hero h1.is-in .w { overflow: visible; }
-.hero h1 .w > span { display: inline-block; animation: rise .9s var(--ease) backwards; transition: transform .35s var(--ease); }
+/* position: relative поднимает слова над фонами строк: иначе жёлтый маркер следующей строки закрашивает
+   хвосты «р», «у», «ц» строки выше (браузер рисует строку за строкой, фон строки 3 ложится поверх текста строки 2) */
+.hero h1 .w > span { display: inline-block; position: relative; animation: rise .9s var(--ease) backwards; transition: transform .35s var(--ease); }
 .hero h1 .w:hover > span { transform: translateY(-.07em); }
 .hero h1 { transition: transform .15s linear; }
 /* остальные крупные заголовки: слова тоже приподнимаются под курсором (класс lift ставит main.js) */
 .lift .w { display: inline-block; }
-.lift .w > span { display: inline-block; transition: transform .35s var(--ease); }
+.lift .w > span { display: inline-block; position: relative; transition: transform .35s var(--ease); }
 .lift .w:hover > span { transform: translateY(-.07em); }
 /* карточки можно оттянуть мышкой, поведение в main.js */
 .card-live.case, .card-live.svc, .card-live.quote { cursor: grab; }

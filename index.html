@@ -147,7 +147,10 @@ main { position: relative; z-index: 1; }
 @media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; } }
 .hero h1 { font-size: clamp(1.9rem, 4.3vw, 3.5rem); font-weight: 700; letter-spacing: -0.02em; margin-top: 20px; line-height: 1.06; }
 .hero h1 .accent { color: var(--hero-accent); background: var(--hero-mark); -webkit-box-decoration-break: clone; box-decoration-break: clone; padding: 0 .1em; margin: 0 -.1em; border-radius: .08em; }
-.hero h1 .w { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .14em; margin-bottom: -.14em; }
+/* окошко с обрезкой нужно только пока слова выезжают снизу; запас по краям, чтобы не резать хвосты букв,
+   а после выезда (класс is-in ставит main.js) обрезка снимается совсем - иначе при подъёме на наведении режется верх */
+.hero h1 .w { display: inline-block; overflow: hidden; vertical-align: top; padding: .12em .08em .2em; margin: -.12em -.08em -.2em; }
+.hero h1.is-in .w { overflow: visible; }
 .hero h1 .w > span { display: inline-block; animation: rise .9s var(--ease) backwards; transition: transform .35s var(--ease); }
 .hero h1 .w:hover > span { transform: translateY(-.07em); }
 .hero h1 { transition: transform .15s linear; }
@@ -159,7 +162,7 @@ main { position: relative; z-index: 1; }
 .card-live.case, .card-live.svc, .card-live.quote { cursor: grab; }
 .card-live.is-dragging, .card-live.is-dragging * { cursor: grabbing; user-select: none; }
 .card-live.is-dragging { position: relative; z-index: 5; } /* пока тянут - поверх соседей */
-@keyframes rise { from { transform: translateY(110%); } to { transform: none; } }
+@keyframes rise { from { transform: translateY(130%); } to { transform: none; } }
 .hero .lead { margin-top: 24px; }
 .hero-cta { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 32px; }
 .hero-facts { display: flex; flex-wrap: wrap; gap: 10px 26px; margin-top: 30px; font-family: var(--mono); font-size: 12.5px; color: var(--stone); }
@@ -408,6 +411,7 @@ main { position: relative; z-index: 1; }
   .js .stagger.is-in > * { animation: none; }
   .ticker-track { animation: none; }
   .hero h1 .w > span { animation: none; transform: none; }
+  .hero h1 .w { overflow: visible; }
   .bg-spot { display: none; }
   .msg { animation: none; }
   .svc-state, .svc, .case, .btn, .chip { transition: none; }
@@ -1147,7 +1151,12 @@ main { position: relative; z-index: 1; }
   }
   var h1 = $('.hero h1');
   if (!reduced) {
-    if (h1) wrapWords(h1, true);
+    if (h1) {
+      wrapWords(h1, true);
+      /* когда последнее слово доехало - снять обрезку, чтобы буквы не резались при наведении */
+      var words = $$('.w > span', h1);
+      setTimeout(function () { h1.classList.add('is-in'); }, 120 + words.length * 70 + 950);
+    }
     $$('.h2, .contact h2, .ready h3, .svc h3, .honest-col h3').forEach(function (h) {
       h.classList.add('lift');
       wrapWords(h, false);

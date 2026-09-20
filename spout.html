@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spout Finance beta: what a first-time user runs into before the first trade</title>
+<meta name="description" content="Product feedback on the Spout Finance devnet beta: onboarding, tour, funding wall, trading UI and the 0% borrowing model.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1c1b19;--muted:#6b675f;--line:#e4e0d6;--accent:#0f5f8f;--code:#f0ede6}
+@media (prefers-color-scheme:dark){:root{--bg:#151513;--fg:#ebe7de;--muted:#9a958a;--line:#2c2b27;--accent:#7fb7dc;--code:#22211d}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 Georgia,"Times New Roman",serif}
+main{max-width:720px;margin:0 auto;padding:48px 16px 80px}
+h1{font-size:2rem;line-height:1.2;margin:0 0 .5rem}
+h2{font-size:1.35rem;margin:2.4rem 0 .8rem;padding-top:1.2rem;border-top:1px solid var(--line)}
+p,li{margin:.6rem 0}
+em{color:var(--muted)}
+a{color:var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:.92rem;margin:1rem 0}
+th,td{border:1px solid var(--line);padding:.45rem .6rem;text-align:left;vertical-align:top}
+th{background:var(--code)}
+ol,ul{padding-left:1.4rem}
+.meta{color:var(--muted);font-size:.9rem;margin-bottom:2rem}
+</style>
+</head>
+<body>
+<main>
+<h1>Spout Finance beta: what a first-time user runs into before the first trade</h1>
+<p><em>Product feedback for the Superteam Earn bounty. Tested on beta.spout.finance (Solana devnet), 11-15 September 2026, Phantom wallet, desktop Chrome.</em></p>
+<h2>TL;DR</h2>
+<p>Spout lets you buy tokenized US stocks 1:1 backed at Alpaca, borrow against them at 0% and (later) lend USDC into vaults. The trading UI is clean and the guided tour is one of the better ones I have seen in DeFi. But the beta has a wall right before the first trade: a new user cannot get test SOL for fees anywhere inside the product, the tour never mentions it, and the in-app assistant does not understand the question. I spent four days on that wall. Below is everything I found on the way, sorted by how much it would hurt a real user.</p>
+<p>Top 6 findings:</p>
+<ol>
+<li>Email login is dead. Privy returns "This is a test application that has reached its user limit". Every new tester who does not already have a Solana wallet is locked out of the beta right now.</li>
+<li>First-screen contradiction: banner says "0% interest on borrowing. Always", the table right under it shows Borrow Cost 0.06%-0.86%/yr per asset. Nowhere explained.</li>
+<li>Access card says "SOLANA TESTNET", the app actually runs on devnet. Anyone who follows the card ends up on the wrong network in Phantom.</li>
+<li>No path to test funds. No faucet link, no mention in the tour, and Ask Spout answers the question with a circular "buy an asset, then borrow USDC".</li>
+<li>Buy button is active while the market is closed. Clicking it fails with a fee error instead of a "market closed" message.</li>
+<li>Earn is described as a working feature in the tour (Senior/Junior tranches, weekly payouts), but the Earn page is a "vaults are on the way" placeholder.</li>
+</ol>
+<h2>1. Getting in</h2>
+<p><strong>Beta code.</strong> Support (@SpoutHelp) sent a code within an hour of asking. Good. The gate screen says "enter the email and code we sent you" but nobody asked for my email and any email passes validation. Either make the email field do something or drop it.</p>
+<p><strong>Access card</strong>. A nice touch, card number, "Post on X" button, the works. It says SOLANA TESTNET. The app is on devnet. After connecting, the toast says "Wallet verified for devnet". Testnet and devnet are different chains; I had switched Phantom to Testnet because the card told me to, and had to go back and change it. This is the first thing every tester will trip on. Fix the card text.</p>
+<p><strong>Wallet connect</strong>. Privy modal with email or wallet, standard Sign-in-with-Solana message. The wallet path works fine.</p>
+<p><strong>Email login does not work at all</strong>. On 15 Sept I tried the "your@email.com" option to see whether an embedded wallet would spare users the SOL problem below. Privy answered: "Unable to sign in. This is a test application that has reached its user limit. To allow more users, this app needs to be upgraded to production." That is a Privy plan setting on Spout's side, not a user error. Consequence: anyone arriving at the beta without a Solana wallet cannot get in, and the bounty brief does not warn about it. This is a five-minute fix in the Privy dashboard and it should be the first thing the team does.</p>
+<p><strong>KYC badge.</strong> Settings shows "KYC Status: Confirmed, verified on-chain, identity account found". I never went through any identity check. On a testnet an auto-approved identity is fine, but label it as such; a "Confirmed" badge for a check that never happened undermines trust in the real one.</p>
+<h2>2. The guided tour</h2>
+<p>11 steps, short, highlights the right elements, has Back and Skip. It explains the 1:1 Alpaca custody, the order form, leverage 1x-2x, the "skip leverage, borrow later" idea, LTV and Health Factor on the Borrow page, Earn with Senior/Junior tranches, and the Ask Spout assistant.</p>
+<p>What it does not do:</p>
+<ul>
+<li>It never says where to get test USDC or SOL. For a testnet product this is question number one.</li>
+<li>It presents Earn as live. The Earn page is a placeholder.</li>
+<li>Step 5 says "Spout lends the difference at 0%". The table on the same screen shows a non-zero Borrow Cost. The tour was the natural place to explain that number and it doesn't.</li>
+</ul>
+<h2>3. Funding the wallet: the four-day wall</h2>
+<p>This is the part I want the team to read twice, because it is the one that will lose real users.</p>
+<p>After connecting I had $0 USDC and 0 SOL. The profile menu has Portfolio, Settings, Disconnect. No faucet.</p>
+<p>I asked the in-app assistant "How do I get test USDC on devnet?". The answer: buy an spAsset, then borrow USDC against it on the Borrow page. To buy an spAsset you need USDC. The assistant sends new users in a circle.</p>
+<p>So I went outside. Circle's faucet gave me 20 test USDC, and Spout picked the balance up instantly without a reload, which is nice. Then I tried to buy $10 of NVDA and got "Not enough SOL, you need ~0.002 for fees. Collect some from the devnet faucet and try again". Clear message, correct amount, no link. And getting 0.002 devnet SOL turned out to be the hardest part of the whole test:</p>
+<ul>
+<li>The public RPC airdrop and every site that proxies it return "airdrop limit reached / faucet has run dry".</li>
+<li>faucet.solana.com requires a GitHub login and rejects accounts it considers too new. Without GitHub it refuses outright.</li>
+<li>The proof-of-work faucet needs a few thousand lamports already in the wallet to pay for its own claim transaction, so it cannot bootstrap an empty wallet.</li>
+<li>I asked @SpoutHelp for 0.01 devnet SOL on 11 Sept and the community group on 15 Sept. No reply as of writing.</li>
+</ul>
+<p>None of this is Spout's code. All of it is Spout's onboarding problem, because the product is the one asking me to have SOL and the product is the only place that could have solved it. Three fixes, any one of which would have saved me four days:</p>
+<ol>
+<li>A "Get test funds" button in the profile menu that airdrops a small amount of SOL and USDC from a Spout-controlled wallet. On devnet this costs nothing.</li>
+<li>Fee sponsorship for the Privy embedded wallet path, so email users never see the word SOL. (I was going to test whether this already exists; see section 6.)</li>
+<li>At minimum, a link in the "Not enough SOL" toast and a line in the tour.</li>
+</ol>
+<h2>4. Trading UI</h2>
+<p><strong>Asset list</strong>. 11 assets: AAPL, GOOG, GS, MSTR, NVDA, PFE, SMCI, XOM plus ETFs BSOL, GLD, IBIT. Market Cap shows "—" for the ETFs. Borrow Cost column per asset. 30-day sparkline. Search and type filter work.</p>
+<p><strong>Market status.</strong> "Market: Closed" with a countdown to the US open. The tooltip says pending orders fill from the open, which is the right behaviour. But the Buy button stays fully active while closed, and the failure I got was about SOL, not about the market. If orders queue, say so in the preview ("this order will fill at 9:30 ET"). If they don't, disable the button.</p>
+<p><strong>Order preview</strong>. $10 at $218.37 shows "0.05 NVDA". The real number is 0.0458. Rounding up in a financial preview is a bad habit; show four decimals or the exact figure. The preview also has no line for network fee, which is exactly what then killed the order.</p>
+<p><strong>Leverage.</strong> 1x-2x slider in the buy panel. The landing banner and the bounty brief never mention leverage on tokenized stocks. It is a big product decision (and a regulatory one) and it is presented as a slider next to the amount field.</p>
+<h2>5. The model: what "0% borrowing" actually means</h2>
+<p>I pushed Ask Spout on the Borrow Cost contradiction. The answer, paraphrased: borrowers pay no interest; Spout earns by writing covered options on the collateral, keeps 20% of the option premium as protocol fee and passes 80% to lenders; no deposit or withdrawal fees; liquidation carries a small penalty.</p>
+<p>That is a coherent model and it is more interesting than "0%". It also means the Borrow Cost column is probably the implied cost of the option overlay per asset, which is why it differs by ticker (0.00% NVDA, 0.86% GS). If that is right, say it. Right now the banner promises zero, the table shows a number, the tour skips it, and only a persistent chat with the bot gets you the real answer. Users who don't dig will assume one of the two is a lie.</p>
+<p>Things I would want on a "How it works" page:</p>
+<ul>
+<li>who writes the options, on what venue, and what happens to my position if the option is exercised (do I lose upside above the strike?)</li>
+<li>what "reserves 100.2%" is measured against and how often it is attested</li>
+<li>the liquidation penalty as a number</li>
+<li>whether Borrow Cost is charged to me, netted against the lender yield, or purely informational</li>
+</ul>
+<h2>6. Buy, borrow, sell: what I could not test, and why that is the finding</h2>
+<p>I did not get to place an order. The wallet never had the 0.002 SOL the Buy button asks for, and the email path that would have avoided SOL entirely is closed (section 1). So this section is not a review of the trading flow. It is a data point about it: a motivated tester with a funded USDC balance, a working wallet and four days spent chasing a fraction of a cent of devnet SOL still did not reach the first trade. If that happens to someone who came specifically to test, it will happen to a lot of people at launch, and they will not write a report about it, they will just leave.</p>
+<p>What I planned to check, and what I would ask the team to look at until someone gets through:</p>
+<ul>
+<li>Does an order placed at "Market: Closed" appear as pending and fill at the open, and how does the UI tell the user this? The preview says nothing about it today.</li>
+<li>On the Borrow page with a fresh position: how does Health Factor move as the LTV slider goes from 0 to 50%, and is the liquidation penalty shown as a number before confirming? Right now it exists only as "a small penalty" in the bot's answer.</li>
+<li>Does Sell settle back to USDC instantly or does it also wait for the market?</li>
+<li>Does the Privy embedded wallet path sponsor fees? If it does, email users never see the word SOL and fix #0 in the table below solves fix #1 for them too. If it doesn't, they hit the same wall with no Phantom to fall back on.</li>
+</ul>
+<p>I am happy to run this part and send a follow-up the day the beta gets a test-funds button or the Privy limit is lifted.</p>
+<h2>7. Smaller things</h2>
+<ul>
+<li>Ask Spout is fast, stays on topic and does not make things up. It just has no knowledge of the testnet or the UI. Feed it the FAQ about faucets and networks and it becomes actually useful.</li>
+<li>Balance updates without reload after an external transfer. Good.</li>
+<li>"Take a tour" pill bottom-left stays visible after the tour is done. Fine, but let me dismiss it.</li>
+<li>The email field on the gate screen accepts anything.</li>
+<li>Market Cap "—" on ETFs looks like a bug even if it is intentional. Show AUM or hide the column for ETFs.</li>
+</ul>
+<h2>8. Priorities if I were the PM</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Fix</th>
+<th>Effort</th>
+<th>Why first</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Upgrade the Privy app so email login works</td>
+<td>trivial</td>
+<td>New testers without a wallet are locked out today.</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Test-funds button or fee sponsorship</td>
+<td>small</td>
+<td>Every tester hits this wall. Some will not climb it.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Card says testnet, app is devnet</td>
+<td>trivial</td>
+<td>Wrong network on step one.</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Explain Borrow Cost next to the 0% banner</td>
+<td>small</td>
+<td>Trust. Two contradicting numbers on the first screen.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Market-closed behaviour on the Buy button</td>
+<td>small</td>
+<td>Users need to know if the order queues or fails.</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Hide or label Earn as coming soon in the tour</td>
+<td>trivial</td>
+<td>Don't promise what isn't there.</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Exact quantities in the order preview</td>
+<td>trivial</td>
+<td>Financial UI, no rounding up.</td>
+</tr>
+</tbody>
+</table>
+<h2>Closing</h2>
+<p>The core of Spout is sound and the UI is ahead of most devnet betas. What is missing is the last metre of onboarding: the product asks for SOL it never helps you get, and the two numbers on its first screen disagree. Fix those and the tour will carry a new user straight to a first trade.</p>
+<p><em>Wallet used: GXKYfb…FFc6 on devnet. Happy to re-test once the beta changes.</em></p>
+<p class="meta">Roman Alekseev, September 2026</p>
+</main>
+</body>
+</html>

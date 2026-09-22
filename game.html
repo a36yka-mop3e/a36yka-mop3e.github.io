@@ -1,0 +1,1638 @@
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>root@breach:~# ./run.sh</title>
+<style>
+  :root {
+    --bg: #05080a;
+    --bg-window: #0a1210;
+    --bg-panel: #0d1712;
+    --bg-cell: #0b1512;
+    --line: #1c3324;
+    --line-soft: #142a1e;
+    --green: #3dffa0;
+    --green-dim: #1f8f5c;
+    --green-glow: rgba(61, 255, 160, 0.55);
+    --cyan: #2fe0ff;
+    --cyan-glow: rgba(47, 224, 255, 0.55);
+    --red: #ff3b5c;
+    --amber: #ffb648;
+    --text: #b9f2cf;
+    --text-dim: #5c8a70;
+    --text-faint: #33513f;
+    --mono: 'Cascadia Code', 'Fira Code', ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--bg);
+  }
+
+  body {
+    font-family: var(--mono);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(1rem, 4vw, 3rem);
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  ::selection { background: var(--green-dim); color: #04140c; }
+
+  button { font-family: inherit; }
+
+  button:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+  }
+
+  /* ---------- background layers ---------- */
+
+  #matrix-rain {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh; /* на мобильных vh скачет из-за адресной строки */
+  }
+
+  .vignette {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.65) 100%);
+  }
+
+  .scanlines {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0.35;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0) 0px,
+      rgba(0, 0, 0, 0) 2px,
+      rgba(0, 0, 0, 0.35) 3px
+    );
+    mix-blend-mode: multiply;
+  }
+
+  /* ---------- terminal window chrome ---------- */
+
+  .terminal-window {
+    position: relative;
+    z-index: 10;
+    width: min(1040px, 100%);
+    background: linear-gradient(180deg, var(--bg-window), #071009);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow:
+      0 0 0 1px rgba(61, 255, 160, 0.06),
+      0 20px 60px rgba(0, 0, 0, 0.65),
+      0 0 80px rgba(61, 255, 160, 0.05);
+    overflow: hidden;
+  }
+
+  .title-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.9rem;
+    background: #081109;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .dot { width: 10px; height: 10px; border-radius: 50%; opacity: 0.85; }
+  .dot.red { background: #ff5f57; }
+  .dot.yellow { background: #febc2e; }
+  .dot.green { background: #28c840; }
+
+  .title-bar-label {
+    margin-left: 0.4rem;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    letter-spacing: 0.03em;
+  }
+
+  /* ---------- boot screen ---------- */
+
+  #boot-screen {
+    padding: 1.75rem clamp(1rem, 3vw, 2rem);
+    min-height: 340px;
+    font-size: 0.85rem;
+    line-height: 1.75;
+    cursor: pointer;
+  }
+
+  #boot-lines p {
+    margin: 0;
+    white-space: pre-wrap;
+    color: var(--text-dim);
+  }
+
+  #boot-lines p .ok { color: var(--green); }
+
+  #boot-skip {
+    margin-top: 1.5rem;
+    color: var(--text-faint);
+    font-size: 0.75rem;
+    opacity: 0;
+    animation: fade-in 0.4s ease 1.4s forwards;
+  }
+
+  @keyframes fade-in { to { opacity: 1; } }
+
+  /* ---------- app ---------- */
+
+  #app { display: none; padding: clamp(1.25rem, 3vw, 2.25rem); }
+  #app.visible { display: block; }
+
+  header.app-header { margin-bottom: 1.5rem; }
+
+  .eyebrow {
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    color: var(--text-faint);
+    margin: 0 0 0.5rem;
+  }
+
+  h1.glitch {
+    margin: 0;
+    font-size: clamp(1.7rem, 4.6vw, 2.7rem);
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    color: var(--green);
+    text-shadow: 0 0 12px var(--green-glow), 0 0 2px var(--green-glow);
+    position: relative;
+    text-wrap: balance;
+  }
+
+  h1.glitch::before,
+  h1.glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    overflow: hidden;
+    background: transparent;
+  }
+
+  h1.glitch::before {
+    color: var(--cyan);
+    clip-path: inset(0 0 88% 0);
+    animation: glitch-a 5.5s infinite linear;
+  }
+
+  h1.glitch::after {
+    color: var(--red);
+    clip-path: inset(85% 0 0 0);
+    animation: glitch-b 6.5s infinite linear;
+  }
+
+  @keyframes glitch-a {
+    0%, 92%, 100% { transform: translate(0, 0); opacity: 0; }
+    93% { transform: translate(-3px, -1px); opacity: 0.8; }
+    94% { transform: translate(3px, 1px); opacity: 0.8; }
+    95% { transform: translate(-2px, 0); opacity: 0; }
+  }
+
+  @keyframes glitch-b {
+    0%, 89%, 100% { transform: translate(0, 0); opacity: 0; }
+    90% { transform: translate(3px, 1px); opacity: 0.8; }
+    91% { transform: translate(-3px, 0); opacity: 0.8; }
+    92% { transform: translate(2px, -1px); opacity: 0; }
+  }
+
+  .subtitle {
+    margin: 0.6rem 0 0;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+  }
+
+  .subtitle .live { color: var(--green); }
+
+  /* ---------- module tabs ---------- */
+
+  .mode-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin: 1.1rem 0 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  .mode-tab {
+    background: transparent;
+    border: 1px solid transparent;
+    border-bottom: none;
+    color: var(--text-faint);
+    font-size: 0.73rem;
+    letter-spacing: 0.06em;
+    padding: 0.5rem 0.9rem;
+    cursor: pointer;
+    position: relative;
+    top: 1px;
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+
+  .mode-tab:hover { color: var(--text-dim); }
+
+  .mode-tab[aria-selected="true"] {
+    color: var(--green);
+    border-color: var(--line);
+    background: var(--bg-panel);
+    text-shadow: 0 0 10px var(--green-glow);
+  }
+
+  /* ---------- layout ---------- */
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+    align-items: start;
+    margin-top: 1.5rem;
+  }
+
+  @media (max-width: 760px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  .board-panel { display: flex; flex-direction: column; gap: 1rem; }
+  .board-panel[hidden] { display: none; }
+
+  .status-line {
+    font-size: 0.85rem;
+    min-height: 2.6em;
+    color: var(--text);
+    letter-spacing: 0.02em;
+    margin: 0;
+  }
+
+  .status-line .tag-x, .status-line .tag-w { color: var(--green); text-shadow: 0 0 8px var(--green-glow); }
+  .status-line .tag-o, .status-line .tag-b { color: var(--cyan); text-shadow: 0 0 8px var(--cyan-glow); }
+  .status-line .tag-win { color: var(--green); }
+  .status-line .tag-draw { color: var(--amber); }
+  .status-line .tag-alert { color: var(--red); text-shadow: 0 0 8px rgba(255, 59, 92, 0.5); }
+  .status-line .tag-calc { color: var(--amber); }
+
+  /* ---------- tic-tac-toe board ---------- */
+
+  .board-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+  }
+
+  .board {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 3px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    aspect-ratio: 1;
+    z-index: 1;
+  }
+
+  .cell {
+    background: var(--bg-cell);
+    border: none;
+    color: transparent;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: clamp(2.2rem, 9vw, 3.4rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.15s ease;
+  }
+
+  .cell:hover:not(:disabled) { background: #101f18; }
+  .cell:disabled { cursor: default; }
+
+  .cell.mark-x, .cell.mark-o { animation: mark-in 0.25s ease-out; }
+  .cell.mark-x { color: var(--green); text-shadow: 0 0 16px var(--green-glow); }
+  .cell.mark-o { color: var(--cyan); text-shadow: 0 0 16px var(--cyan-glow); }
+
+  @keyframes mark-in {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .cell.win { animation: win-pulse 1s ease-in-out infinite; }
+
+  @keyframes win-pulse {
+    0%, 100% { background: #10251a; }
+    50% { background: #163523; }
+  }
+
+  .win-line-svg {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  .win-line-svg path {
+    fill: none;
+    stroke: var(--green);
+    stroke-width: 4;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 6px var(--green-glow));
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: draw-line 0.35s ease forwards;
+  }
+
+  @keyframes draw-line { to { stroke-dashoffset: 0; } }
+
+  /* ---------- chess board ---------- */
+
+  .chess-wrap {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .chess-board {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    border: 1px solid var(--line);
+    aspect-ratio: 1;
+    background: var(--line);
+  }
+
+  .sq {
+    border: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(1.3rem, 4.4vw, 2.1rem);
+    line-height: 1;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.12s ease;
+  }
+
+  .sq.light { background: #14251c; }
+  .sq.dark { background: #0a150f; }
+  .sq:hover:not(:disabled) { filter: brightness(1.45); }
+  .sq:disabled { cursor: default; }
+
+  .sq.wp { color: var(--green); text-shadow: 0 0 10px var(--green-glow); }
+  .sq.bp { color: var(--cyan); text-shadow: 0 0 10px var(--cyan-glow); }
+
+  .sq.last-move { box-shadow: inset 0 0 0 1px rgba(61, 255, 160, 0.35); }
+
+  .sq.selected { background: #1d4030; box-shadow: inset 0 0 0 2px var(--green); }
+
+  .sq.target::after {
+    content: '';
+    position: absolute;
+    width: 26%;
+    height: 26%;
+    border-radius: 50%;
+    background: var(--green);
+    opacity: 0.55;
+    box-shadow: 0 0 10px var(--green-glow);
+  }
+
+  .sq.target.capture::after {
+    width: 84%;
+    height: 84%;
+    border-radius: 0;
+    background: transparent;
+    border: 2px solid var(--red);
+    opacity: 0.75;
+    box-shadow: 0 0 10px rgba(255, 59, 92, 0.45);
+  }
+
+  .sq.in-check {
+    background: #3a1119;
+    animation: check-pulse 0.9s ease-in-out infinite;
+  }
+
+  @keyframes check-pulse {
+    0%, 100% { background: #3a1119; }
+    50% { background: #571a26; }
+  }
+
+  .chess-files, .chess-ranks { font-size: 0.6rem; color: var(--text-faint); }
+
+  .chess-files {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    text-align: center;
+    padding-top: 0.35rem;
+    letter-spacing: 0.1em;
+  }
+
+  .captured-row {
+    display: flex;
+    gap: 0.9rem;
+    font-size: 0.72rem;
+    color: var(--text-faint);
+    flex-wrap: wrap;
+    min-height: 1.2em;
+  }
+
+  .captured-row .cap-label { letter-spacing: 0.1em; }
+  .captured-row .cap-w { color: var(--green); font-size: 0.95rem; }
+  .captured-row .cap-b { color: var(--cyan); font-size: 0.95rem; }
+
+  /* ---------- controls ---------- */
+
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .scoreboard {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .scoreboard b { color: var(--text); font-weight: 700; }
+  .scoreboard .sx { color: var(--green); }
+  .scoreboard .so { color: var(--cyan); }
+  .scoreboard .sd { color: var(--amber); }
+
+  .term-btn {
+    background: transparent;
+    border: 1px solid var(--green-dim);
+    color: var(--green);
+    padding: 0.55rem 1rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: background 0.15s ease, box-shadow 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .term-btn:hover { background: rgba(61, 255, 160, 0.08); box-shadow: 0 0 14px rgba(61, 255, 160, 0.25); }
+
+  .term-btn.pulse { animation: btn-pulse 1.4s ease-in-out infinite; }
+
+  @keyframes btn-pulse {
+    0%, 100% { box-shadow: 0 0 0 rgba(61, 255, 160, 0); }
+    50% { box-shadow: 0 0 16px rgba(61, 255, 160, 0.4); }
+  }
+
+  .toggle-btn {
+    border-color: var(--line);
+    color: var(--text-dim);
+  }
+
+  .toggle-btn:hover { background: rgba(61, 255, 160, 0.05); box-shadow: none; }
+
+  .toggle-btn[aria-pressed="true"] {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    box-shadow: 0 0 14px rgba(47, 224, 255, 0.2);
+  }
+
+  .toggle-btn[aria-pressed="true"]:hover { background: rgba(47, 224, 255, 0.08); }
+
+  .legend {
+    display: flex;
+    gap: 1.1rem;
+    font-size: 0.72rem;
+    color: var(--text-faint);
+    flex-wrap: wrap;
+  }
+
+  .legend span.mk { font-weight: 700; margin-right: 0.3em; }
+  .legend .lx { color: var(--green); }
+  .legend .lo { color: var(--cyan); }
+
+  /* ---------- log panel ---------- */
+
+  .log-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--line-soft);
+    display: flex;
+    flex-direction: column;
+    min-height: 420px;
+    max-height: 520px;
+  }
+
+  .log-panel h2 {
+    margin: 0;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--line-soft);
+    font-weight: 600;
+  }
+
+  #log-feed {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.75rem 0.9rem;
+    font-size: 0.75rem;
+    line-height: 1.9;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  #log-feed::-webkit-scrollbar { width: 8px; }
+  #log-feed::-webkit-scrollbar-track { background: transparent; }
+  #log-feed::-webkit-scrollbar-thumb { background: var(--line); }
+
+  .log-entry { color: var(--text-dim); white-space: pre-wrap; word-break: break-word; }
+  .log-entry .ts { color: var(--text-faint); }
+  .log-entry.sys { color: var(--amber); }
+  .log-entry.divider { color: var(--text-faint); letter-spacing: 0.1em; margin-top: 0.4rem; }
+  .log-entry .who-x, .log-entry .who-w { color: var(--green); }
+  .log-entry .who-o, .log-entry .who-b { color: var(--cyan); }
+  .log-entry .hit { color: var(--red); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
+  }
+
+  /* ---------- мобильные ---------- */
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  /* убираем задержку тапа и зум по двойному тапу на игровых элементах */
+  .cell, .sq, .term-btn, .mode-tab, #boot-screen { touch-action: manipulation; }
+
+  /* на тач-экранах hover залипает после тапа — гасим */
+  @media (hover: none) {
+    .cell:hover:not(:disabled) { background: var(--bg-cell); }
+    .sq:hover:not(:disabled) { filter: none; }
+    .term-btn:hover { background: transparent; box-shadow: none; }
+    .mode-tab:hover { color: var(--text-faint); }
+  }
+
+  @media (max-width: 560px) {
+    body { padding: 0; align-items: flex-start; }
+
+    .terminal-window {
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+      min-height: 100vh;
+    }
+
+    #boot-screen { min-height: 60vh; padding: 1.25rem 1rem; }
+
+    #app { padding: 1rem 0.9rem 1.5rem; }
+
+    header.app-header { margin-bottom: 1rem; }
+
+    /* вкладки не влезают в строку — даём горизонтальную прокрутку */
+    .mode-tabs {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .mode-tabs::-webkit-scrollbar { display: none; }
+    .mode-tab { flex: 0 0 auto; padding: 0.6rem 0.75rem; font-size: 0.7rem; }
+
+    .layout { gap: 1.25rem; margin-top: 1.1rem; }
+
+    /* доски — во всю ширину экрана */
+    .board-wrap { max-width: 100%; }
+    .cell { font-size: 13vw; }
+    .sq { font-size: 8.2vw; }
+    .chess-files, .chess-ranks { font-size: 0.55rem; }
+
+    /* кнопки под палец: минимум 44px высоты */
+    .controls { gap: 0.6rem; }
+    .term-btn {
+      min-height: 44px;
+      padding: 0.7rem 0.9rem;
+      font-size: 0.75rem;
+      flex: 1 1 auto;
+    }
+
+    .scoreboard { width: 100%; justify-content: space-between; font-size: 0.72rem; }
+
+    #log-feed { max-height: 32vh; }
+  }
+</style>
+
+<canvas id="matrix-rain" aria-hidden="true"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+<div class="scanlines" aria-hidden="true"></div>
+
+<main class="terminal-window">
+  <div class="title-bar">
+    <span class="dot red"></span>
+    <span class="dot yellow"></span>
+    <span class="dot green"></span>
+    <span class="title-bar-label" id="shell-path">root@breach:~# ./tactoe.sh</span>
+  </div>
+
+  <div id="boot-screen">
+    <div id="boot-lines"></div>
+    <p id="boot-skip">press any key / click to skip</p>
+  </div>
+
+  <div id="app">
+    <header class="app-header">
+      <p class="eyebrow" id="eyebrow">PROTOCOL :: GRID_BREACH</p>
+      <h1 class="glitch" id="app-title" data-text="TIC · TAC · TOE">TIC · TAC · TOE</h1>
+      <p class="subtitle" id="subtitle">connection status: <span class="live">LIVE</span> — two operators, one grid, no mercy</p>
+
+      <div class="mode-tabs" role="tablist" aria-label="Module">
+        <button class="mode-tab" type="button" role="tab" id="tab-ttt" data-mode="ttt" aria-selected="true">[ ./tactoe.sh ]</button>
+        <button class="mode-tab" type="button" role="tab" id="tab-chess" data-mode="chess" aria-selected="false">[ ./chess.sh ]</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <section class="board-panel" id="ttt-panel" role="tabpanel" aria-labelledby="tab-ttt">
+        <p class="status-line" id="ttt-status" aria-live="polite"></p>
+
+        <div class="board-wrap">
+          <div class="board" id="board" role="grid" aria-label="Tic-tac-toe grid"></div>
+        </div>
+
+        <div class="legend">
+          <span><span class="mk lx">X</span>PLAYER_1</span>
+          <span><span class="mk lo">O</span><span id="ttt-p2-label">PLAYER_2</span></span>
+        </div>
+
+        <div class="controls">
+          <div class="scoreboard" aria-live="polite">
+            <span class="sx">X <b id="score-x">0</b></span>
+            <span class="so">O <b id="score-o">0</b></span>
+            <span class="sd">DRAW <b id="score-d">0</b></span>
+          </div>
+          <div class="controls">
+            <button class="term-btn toggle-btn" type="button" id="ttt-ai-btn" aria-pressed="false">[ OPPONENT: HUMAN ]</button>
+            <button class="term-btn" type="button" id="ttt-restart-btn">[ RESTART ]</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="board-panel" id="chess-panel" role="tabpanel" aria-labelledby="tab-chess" hidden>
+        <p class="status-line" id="chess-status" aria-live="polite"></p>
+
+        <div class="chess-wrap">
+          <div class="chess-board" id="chess-board" role="grid" aria-label="Chess board"></div>
+          <div class="chess-files" aria-hidden="true">
+            <span>a</span><span>b</span><span>c</span><span>d</span><span>e</span><span>f</span><span>g</span><span>h</span>
+          </div>
+        </div>
+
+        <div class="captured-row">
+          <span><span class="cap-label">SEIZED BY WHITE</span> <span class="cap-b" id="cap-by-white">—</span></span>
+          <span><span class="cap-label">SEIZED BY BLACK</span> <span class="cap-w" id="cap-by-black">—</span></span>
+        </div>
+
+        <div class="legend">
+          <span><span class="mk lx">♙</span>WHITE / PLAYER_1</span>
+          <span><span class="mk lo">♟</span><span id="chess-p2-label">BLACK / PLAYER_2</span></span>
+        </div>
+
+        <div class="controls">
+          <div class="scoreboard" aria-live="polite">
+            <span class="sx">WHITE <b id="score-w">0</b></span>
+            <span class="so">BLACK <b id="score-b">0</b></span>
+            <span class="sd">DRAW <b id="score-cd">0</b></span>
+          </div>
+          <div class="controls">
+            <button class="term-btn toggle-btn" type="button" id="chess-ai-btn" aria-pressed="false">[ OPPONENT: HUMAN ]</button>
+            <button class="term-btn" type="button" id="chess-restart-btn">[ RESTART ]</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="log-panel">
+        <h2>SYSTEM LOG</h2>
+        <div id="log-feed"></div>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------------- matrix rain ---------------- */
+
+  (function matrixRain() {
+    var canvas = document.getElementById('matrix-rain');
+    var ctx = canvas.getContext('2d');
+    var fontSize = 16;
+    var chars = '0123456789$#%&*+/\\<>{}[];:.';
+    var cols, drops;
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      cols = Math.floor(canvas.width / fontSize);
+      drops = new Array(cols).fill(0).map(function () {
+        return Math.floor(Math.random() * -40);
+      });
+    }
+
+    function frame() {
+      ctx.fillStyle = 'rgba(5, 8, 10, 0.065)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.font = fontSize + 'px monospace';
+      for (var i = 0; i < cols; i++) {
+        var char = chars[Math.floor(Math.random() * chars.length)];
+        var x = i * fontSize;
+        var y = drops[i] * fontSize;
+        ctx.fillStyle = Math.random() < 0.02 ? '#d8fff0' : 'rgba(61, 255, 160, 0.75)';
+        ctx.fillText(char, x, y);
+        if (y > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        } else {
+          drops[i]++;
+        }
+      }
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+    ctx.fillStyle = '#05080a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (reduceMotion) {
+      for (var k = 0; k < 6; k++) frame();
+    } else {
+      setInterval(frame, 45);
+    }
+  })();
+
+  /* ---------------- shared log ---------------- */
+
+  var logEl = document.getElementById('log-feed');
+
+  function nowStamp() {
+    return new Date().toLocaleTimeString('en-GB', { hour12: false });
+  }
+
+  function pushLog(html, cls) {
+    var d = document.createElement('div');
+    d.className = 'log-entry' + (cls ? ' ' + cls : '');
+    d.innerHTML = html;
+    logEl.appendChild(d);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function logSys(msg) {
+    pushLog('<span class="ts">[' + nowStamp() + ']</span> SYSTEM: ' + msg, 'sys');
+  }
+
+  /* ---------------- shared AI scheduling ---------------- */
+
+  function scheduleAiMove(statusEl, fn) {
+    statusEl.innerHTML = '&gt; <span class="tag-calc">SYSTEM calculating exploit…</span>';
+    setTimeout(fn, reduceMotion ? 30 : 380 + Math.random() * 320);
+  }
+
+  function setToggleLabel(btn, on) {
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.textContent = on ? '[ OPPONENT: SYSTEM_AI ]' : '[ OPPONENT: HUMAN ]';
+  }
+
+  /* ---------------- boot sequence ---------------- */
+
+  var bootLinesEl = document.getElementById('boot-lines');
+  var bootScreen = document.getElementById('boot-screen');
+  var appEl = document.getElementById('app');
+
+  var bootLines = [
+    'booting kernel modules ...',
+    'mounting /dev/grid, /dev/board64 ...',
+    'loading modules: tactoe.sh, chess.sh ...',
+    'linking adversarial engine SYSTEM_AI ...',
+    'access granted.'
+  ];
+
+  var bootDone = false;
+
+  function finishBoot() {
+    if (bootDone) return;
+    bootDone = true;
+    bootScreen.style.display = 'none';
+    appEl.classList.add('visible');
+    document.removeEventListener('keydown', finishBoot);
+    bootScreen.removeEventListener('click', finishBoot);
+    bootScreen.removeEventListener('pointerdown', finishBoot);
+    bootScreen.removeEventListener('touchstart', finishBoot);
+    initTicTacToe();
+    initChess();
+    initModeTabs();
+    logSys('session initialized. module tactoe.sh active.');
+  }
+
+  function runBoot() {
+    if (reduceMotion) {
+      bootLines.forEach(function (l, i) {
+        var p = document.createElement('p');
+        p.innerHTML = (i === bootLines.length - 1 ? '<span class="ok">' + l + '</span>' : l);
+        bootLinesEl.appendChild(p);
+      });
+      finishBoot();
+      return;
+    }
+
+    var i = 0;
+    function next() {
+      if (i >= bootLines.length) {
+        setTimeout(finishBoot, 700);
+        return;
+      }
+      var p = document.createElement('p');
+      var isLast = i === bootLines.length - 1;
+      p.innerHTML = (isLast ? '<span class="ok">' + bootLines[i] + '</span>' : bootLines[i]);
+      bootLinesEl.appendChild(p);
+      i++;
+      setTimeout(next, isLast ? 260 : 280 + Math.random() * 200);
+    }
+    setTimeout(next, 200);
+
+    document.addEventListener('keydown', finishBoot);
+    bootScreen.addEventListener('click', finishBoot);
+    bootScreen.addEventListener('pointerdown', finishBoot);
+    bootScreen.addEventListener('touchstart', finishBoot);
+
+    // предохранитель: что бы ни случилось с анимацией — игра откроется сама
+    setTimeout(finishBoot, 6000);
+  }
+
+  /* ---------------- mode tabs ---------------- */
+
+  var MODES = {
+    ttt: {
+      panel: 'ttt-panel',
+      tab: 'tab-ttt',
+      shell: 'root@breach:~# ./tactoe.sh',
+      eyebrow: 'PROTOCOL :: GRID_BREACH',
+      title: 'TIC · TAC · TOE',
+      subtitle: 'connection status: <span class="live">LIVE</span> — two operators, one grid, no mercy'
+    },
+    chess: {
+      panel: 'chess-panel',
+      tab: 'tab-chess',
+      shell: 'root@breach:~# ./chess.sh',
+      eyebrow: 'PROTOCOL :: DEEP_SIEGE',
+      title: 'C H E S S',
+      subtitle: 'connection status: <span class="live">LIVE</span> — 64 sectors, 32 processes, one root key'
+    }
+  };
+
+  function initModeTabs() {
+    Object.keys(MODES).forEach(function (mode) {
+      document.getElementById(MODES[mode].tab).addEventListener('click', function () {
+        switchMode(mode);
+      });
+    });
+  }
+
+  var activeMode = 'ttt';
+
+  function switchMode(mode) {
+    if (mode === activeMode) return;
+    activeMode = mode;
+
+    Object.keys(MODES).forEach(function (m) {
+      var cfg = MODES[m];
+      var on = m === mode;
+      document.getElementById(cfg.panel).hidden = !on;
+      document.getElementById(cfg.tab).setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+
+    var cfg = MODES[mode];
+    document.getElementById('shell-path').textContent = cfg.shell;
+    document.getElementById('eyebrow').textContent = cfg.eyebrow;
+    var titleEl = document.getElementById('app-title');
+    titleEl.textContent = cfg.title;
+    titleEl.setAttribute('data-text', cfg.title);
+    document.getElementById('subtitle').innerHTML = cfg.subtitle;
+
+    pushLog('── switching module: ' + (mode === 'ttt' ? 'TACTOE' : 'CHESS') + ' ──', 'divider');
+  }
+
+  /* ================= TIC-TAC-TOE ================= */
+
+  var WIN_COMBOS = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+    [0, 4, 8], [2, 4, 6]
+  ];
+
+  var tBoard, tCurrent, tOver, tScores, tStarting, tAi, tLocked, tGen = 0;
+  var tBoardEl = document.getElementById('board');
+  var tStatusEl = document.getElementById('ttt-status');
+  var tCellEls = [];
+  var tSvg;
+
+  function initTicTacToe() {
+    tScores = { X: 0, O: 0, DRAW: 0 };
+    tStarting = 'X';
+    tAi = false;
+
+    tBoardEl.innerHTML = '';
+    tCellEls = [];
+    for (var i = 0; i < 9; i++) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'cell';
+      btn.dataset.index = i;
+      btn.setAttribute('role', 'gridcell');
+      btn.setAttribute('aria-label', 'cell ' + (Math.floor(i / 3) + 1) + ', ' + (i % 3 + 1));
+      btn.addEventListener('click', onTttCellClick);
+      tBoardEl.appendChild(btn);
+      tCellEls.push(btn);
+    }
+    tSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    tSvg.setAttribute('class', 'win-line-svg');
+    tSvg.setAttribute('viewBox', '0 0 100 100');
+    tSvg.setAttribute('preserveAspectRatio', 'none');
+    tBoardEl.appendChild(tSvg);
+
+    document.getElementById('ttt-restart-btn').addEventListener('click', function () {
+      logSys('tactoe: manual restart triggered by operator.');
+      tttReset();
+    });
+
+    document.getElementById('ttt-ai-btn').addEventListener('click', function () {
+      tAi = !tAi;
+      setToggleLabel(this, tAi);
+      document.getElementById('ttt-p2-label').textContent = tAi ? 'SYSTEM_AI' : 'PLAYER_2';
+      logSys('tactoe: opponent set to ' + (tAi ? 'SYSTEM_AI. board wiped.' : 'HUMAN. board wiped.'));
+      tttReset();
+    });
+
+    tttReset();
+  }
+
+  function tttReset() {
+    tGen++;
+    tBoard = Array(9).fill(null);
+    tOver = false;
+    tLocked = false;
+    tCurrent = tStarting;
+    tCellEls.forEach(function (c) {
+      c.textContent = '';
+      c.className = 'cell';
+      c.disabled = false;
+    });
+    tSvg.innerHTML = '';
+    document.getElementById('ttt-restart-btn').classList.remove('pulse');
+    tttUpdateStatus();
+    tttMaybeAiTurn();
+  }
+
+  function tttUpdateStatus() {
+    var tag = tCurrent === 'X' ? 'tag-x' : 'tag-o';
+    var who = tAi && tCurrent === 'O' ? 'SYSTEM_AI' : tCurrent;
+    tStatusEl.innerHTML = '&gt; awaiting input from <span class="' + tag + '">' + who + '</span>';
+  }
+
+  function tttMaybeAiTurn() {
+    if (!tAi || tOver || tCurrent !== 'O') return;
+    tLocked = true;
+    var gen = tGen;
+    scheduleAiMove(tStatusEl, function () {
+      if (gen !== tGen) return;
+      var idx = tttBestMove(tBoard, 'O');
+      tLocked = false;
+      tttPlay(idx);
+    });
+  }
+
+  function onTttCellClick(e) {
+    if (tOver || tLocked) return;
+    if (tAi && tCurrent === 'O') return;
+    var idx = +e.currentTarget.dataset.index;
+    if (tBoard[idx]) return;
+    tttPlay(idx);
+  }
+
+  function tttPlay(idx) {
+    var player = tCurrent;
+    var cell = tCellEls[idx];
+    tBoard[idx] = player;
+    cell.textContent = player;
+    cell.classList.add(player === 'X' ? 'mark-x' : 'mark-o');
+    cell.disabled = true;
+
+    var who = tAi && player === 'O' ? 'SYSTEM_AI' : player;
+    pushLog('<span class="ts">[' + nowStamp() + ']</span> ' +
+      '<span class="who-' + player.toLowerCase() + '">' + who + '</span>' +
+      ' wrote payload to cell (' + Math.floor(idx / 3) + ',' + (idx % 3) + ')');
+
+    var combo = tttFindWin(tBoard);
+    if (combo) {
+      tttEnd(player, combo);
+    } else if (tBoard.every(Boolean)) {
+      tttEnd(null, null);
+    } else {
+      tCurrent = player === 'X' ? 'O' : 'X';
+      tttUpdateStatus();
+      tttMaybeAiTurn();
+    }
+  }
+
+  function tttFindWin(b) {
+    for (var i = 0; i < WIN_COMBOS.length; i++) {
+      var c = WIN_COMBOS[i];
+      if (b[c[0]] && b[c[0]] === b[c[1]] && b[c[1]] === b[c[2]]) return c;
+    }
+    return null;
+  }
+
+  function tttEnd(winner, combo) {
+    tOver = true;
+    tCellEls.forEach(function (c) { c.disabled = true; });
+
+    if (winner) {
+      tScores[winner]++;
+      combo.forEach(function (i) { tCellEls[i].classList.add('win'); });
+      tttDrawWinLine(combo);
+      var who = tAi && winner === 'O' ? 'SYSTEM_AI' : winner;
+      var tag = winner === 'X' ? 'tag-x' : 'tag-o';
+      tStatusEl.innerHTML = '&gt; breach complete — <span class="' + tag + '">' + who +
+        '</span> <span class="tag-win">gained root access</span>';
+      logSys('tactoe: ' + who + ' achieved root access. connection terminated.');
+      tStarting = winner === 'X' ? 'O' : 'X';
+    } else {
+      tScores.DRAW++;
+      tStatusEl.innerHTML = '&gt; <span class="tag-draw">no exploit found — connection reset</span>';
+      logSys('tactoe: stalemate detected. no vulnerability found.');
+      tStarting = tStarting === 'X' ? 'O' : 'X';
+    }
+
+    document.getElementById('score-x').textContent = tScores.X;
+    document.getElementById('score-o').textContent = tScores.O;
+    document.getElementById('score-d').textContent = tScores.DRAW;
+    document.getElementById('ttt-restart-btn').classList.add('pulse');
+  }
+
+  var LINE_POS = { 0: 16.67, 1: 50, 2: 83.33 };
+
+  function tttDrawWinLine(combo) {
+    var a = combo[0], b = combo[2];
+    var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M ' + LINE_POS[a % 3] + ' ' + LINE_POS[Math.floor(a / 3)] +
+      ' L ' + LINE_POS[b % 3] + ' ' + LINE_POS[Math.floor(b / 3)]);
+    path.setAttribute('pathLength', '1');
+    tSvg.appendChild(path);
+  }
+
+  /* ---- tic-tac-toe AI: exhaustive minimax ---- */
+
+  function tttBestMove(b, me) {
+    var best = -Infinity;
+    var picks = [];
+    for (var i = 0; i < 9; i++) {
+      if (b[i]) continue;
+      b[i] = me;
+      var score = tttMinimax(b, me === 'X' ? 'O' : 'X', me, 1);
+      b[i] = null;
+      if (score > best) { best = score; picks = [i]; }
+      else if (score === best) { picks.push(i); }
+    }
+    return picks[Math.floor(Math.random() * picks.length)];
+  }
+
+  function tttMinimax(b, turn, me, depth) {
+    var combo = tttFindWin(b);
+    if (combo) {
+      return b[combo[0]] === me ? 10 - depth : depth - 10;
+    }
+    if (b.every(Boolean)) return 0;
+
+    var maximizing = turn === me;
+    var best = maximizing ? -Infinity : Infinity;
+    for (var i = 0; i < 9; i++) {
+      if (b[i]) continue;
+      b[i] = turn;
+      var score = tttMinimax(b, turn === 'X' ? 'O' : 'X', me, depth + 1);
+      b[i] = null;
+      best = maximizing ? Math.max(best, score) : Math.min(best, score);
+    }
+    return best;
+  }
+
+  /* ================= CHESS ENGINE ================= */
+
+  var GLYPH = {
+    wK: '♔', wQ: '♕', wR: '♖', wB: '♗', wN: '♘', wP: '♙',
+    bK: '♚', bQ: '♛', bR: '♜', bB: '♝', bN: '♞', bP: '♟'
+  };
+
+  var PIECE_NAME = { K: 'king', Q: 'queen', R: 'rook', B: 'bishop', N: 'knight', P: 'pawn' };
+  var KNIGHT_DELTAS = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+  var KING_DELTAS = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+  var ROOK_DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+  var BISHOP_DIRS = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+
+  function idx(r, c) { return r * 8 + c; }
+  function rowOf(i) { return i >> 3; }
+  function colOf(i) { return i & 7; }
+  function onBoard(r, c) { return r >= 0 && r < 8 && c >= 0 && c < 8; }
+  function sqName(i) { return 'abcdefgh'.charAt(colOf(i)) + (8 - rowOf(i)); }
+  function pColor(p) { return p.charAt(0); }
+  function pType(p) { return p.charAt(1); }
+
+  function initialState() {
+    var back = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'];
+    var b = new Array(64).fill(null);
+    for (var c = 0; c < 8; c++) {
+      b[idx(0, c)] = 'b' + back[c];
+      b[idx(1, c)] = 'bP';
+      b[idx(6, c)] = 'wP';
+      b[idx(7, c)] = 'w' + back[c];
+    }
+    return {
+      board: b,
+      turn: 'w',
+      castling: { wk: true, wq: true, bk: true, bq: true },
+      ep: -1,
+      lastMove: null
+    };
+  }
+
+  function cloneState(st) {
+    return {
+      board: st.board.slice(),
+      turn: st.turn,
+      castling: { wk: st.castling.wk, wq: st.castling.wq, bk: st.castling.bk, bq: st.castling.bq },
+      ep: st.ep,
+      lastMove: st.lastMove
+    };
+  }
+
+  function isAttacked(b, target, byColor) {
+    var tr = rowOf(target), tc = colOf(target), i, r, c, p;
+
+    var pDir = byColor === 'w' ? 1 : -1;
+    for (i = -1; i <= 1; i += 2) {
+      r = tr + pDir; c = tc + i;
+      if (onBoard(r, c) && b[idx(r, c)] === byColor + 'P') return true;
+    }
+
+    for (i = 0; i < KNIGHT_DELTAS.length; i++) {
+      r = tr + KNIGHT_DELTAS[i][0]; c = tc + KNIGHT_DELTAS[i][1];
+      if (onBoard(r, c) && b[idx(r, c)] === byColor + 'N') return true;
+    }
+
+    for (i = 0; i < KING_DELTAS.length; i++) {
+      r = tr + KING_DELTAS[i][0]; c = tc + KING_DELTAS[i][1];
+      if (onBoard(r, c) && b[idx(r, c)] === byColor + 'K') return true;
+    }
+
+    var rays = [[ROOK_DIRS, 'R'], [BISHOP_DIRS, 'B']];
+    for (var k = 0; k < 2; k++) {
+      var dirs = rays[k][0], sliderType = rays[k][1];
+      for (i = 0; i < dirs.length; i++) {
+        r = tr + dirs[i][0]; c = tc + dirs[i][1];
+        while (onBoard(r, c)) {
+          p = b[idx(r, c)];
+          if (p) {
+            if (pColor(p) === byColor && (pType(p) === sliderType || pType(p) === 'Q')) return true;
+            break;
+          }
+          r += dirs[i][0]; c += dirs[i][1];
+        }
+      }
+    }
+    return false;
+  }
+
+  function findKing(b, color) {
+    for (var i = 0; i < 64; i++) if (b[i] === color + 'K') return i;
+    return -1;
+  }
+
+  function inCheck(st, color) {
+    var k = findKing(st.board, color);
+    return k >= 0 && isAttacked(st.board, k, color === 'w' ? 'b' : 'w');
+  }
+
+  function pseudoMoves(st, color) {
+    var b = st.board, moves = [], i, j, r, c, p, dirs;
+
+    function push(from, to, extra) {
+      var mv = { from: from, to: to, captured: b[to] || null };
+      if (extra) for (var k in extra) mv[k] = extra[k];
+      moves.push(mv);
+    }
+
+    for (i = 0; i < 64; i++) {
+      p = b[i];
+      if (!p || pColor(p) !== color) continue;
+      var type = pType(p), fr = rowOf(i), fc = colOf(i);
+
+      if (type === 'P') {
+        var dir = color === 'w' ? -1 : 1;
+        var startRow = color === 'w' ? 6 : 1;
+        var promoRow = color === 'w' ? 0 : 7;
+        r = fr + dir;
+        if (onBoard(r, fc) && !b[idx(r, fc)]) {
+          push(i, idx(r, fc), r === promoRow ? { promotion: 'Q' } : null);
+          if (fr === startRow && !b[idx(fr + 2 * dir, fc)]) {
+            push(i, idx(fr + 2 * dir, fc), { double: true });
+          }
+        }
+        for (j = -1; j <= 1; j += 2) {
+          c = fc + j;
+          if (!onBoard(r, c)) continue;
+          var t = idx(r, c);
+          if (b[t] && pColor(b[t]) !== color) {
+            push(i, t, r === promoRow ? { promotion: 'Q' } : null);
+          } else if (!b[t] && t === st.ep) {
+            push(i, t, { enPassant: true, captured: b[idx(fr, c)] });
+          }
+        }
+      } else if (type === 'N' || type === 'K') {
+        dirs = type === 'N' ? KNIGHT_DELTAS : KING_DELTAS;
+        for (j = 0; j < dirs.length; j++) {
+          r = fr + dirs[j][0]; c = fc + dirs[j][1];
+          if (!onBoard(r, c)) continue;
+          var tgt = b[idx(r, c)];
+          if (!tgt || pColor(tgt) !== color) push(i, idx(r, c));
+        }
+      } else {
+        dirs = type === 'R' ? ROOK_DIRS : (type === 'B' ? BISHOP_DIRS : ROOK_DIRS.concat(BISHOP_DIRS));
+        for (j = 0; j < dirs.length; j++) {
+          r = fr + dirs[j][0]; c = fc + dirs[j][1];
+          while (onBoard(r, c)) {
+            var occ = b[idx(r, c)];
+            if (occ) {
+              if (pColor(occ) !== color) push(i, idx(r, c));
+              break;
+            }
+            push(i, idx(r, c));
+            r += dirs[j][0]; c += dirs[j][1];
+          }
+        }
+      }
+    }
+
+    addCastling(st, color, moves);
+    return moves;
+  }
+
+  function addCastling(st, color, moves) {
+    var b = st.board;
+    var homeRow = color === 'w' ? 7 : 0;
+    var kSq = idx(homeRow, 4);
+    if (b[kSq] !== color + 'K') return;
+    var enemy = color === 'w' ? 'b' : 'w';
+    if (isAttacked(b, kSq, enemy)) return;
+
+    var kSide = color === 'w' ? st.castling.wk : st.castling.bk;
+    var qSide = color === 'w' ? st.castling.wq : st.castling.bq;
+
+    if (kSide && b[idx(homeRow, 7)] === color + 'R' &&
+        !b[idx(homeRow, 5)] && !b[idx(homeRow, 6)] &&
+        !isAttacked(b, idx(homeRow, 5), enemy) && !isAttacked(b, idx(homeRow, 6), enemy)) {
+      moves.push({ from: kSq, to: idx(homeRow, 6), captured: null, castle: 'k' });
+    }
+    if (qSide && b[idx(homeRow, 0)] === color + 'R' &&
+        !b[idx(homeRow, 1)] && !b[idx(homeRow, 2)] && !b[idx(homeRow, 3)] &&
+        !isAttacked(b, idx(homeRow, 3), enemy) && !isAttacked(b, idx(homeRow, 2), enemy)) {
+      moves.push({ from: kSq, to: idx(homeRow, 2), captured: null, castle: 'q' });
+    }
+  }
+
+  function applyMove(st, mv) {
+    var next = cloneState(st);
+    var b = next.board;
+    var piece = b[mv.from];
+    var color = pColor(piece);
+
+    b[mv.from] = null;
+    b[mv.to] = mv.promotion ? color + mv.promotion : piece;
+
+    if (mv.enPassant) {
+      b[idx(rowOf(mv.from), colOf(mv.to))] = null;
+    }
+    if (mv.castle) {
+      var homeRow = rowOf(mv.from);
+      if (mv.castle === 'k') {
+        b[idx(homeRow, 5)] = b[idx(homeRow, 7)];
+        b[idx(homeRow, 7)] = null;
+      } else {
+        b[idx(homeRow, 3)] = b[idx(homeRow, 0)];
+        b[idx(homeRow, 0)] = null;
+      }
+    }
+
+    if (pType(piece) === 'K') {
+      if (color === 'w') { next.castling.wk = false; next.castling.wq = false; }
+      else { next.castling.bk = false; next.castling.bq = false; }
+    }
+    [mv.from, mv.to].forEach(function (sq) {
+      if (sq === idx(7, 0)) next.castling.wq = false;
+      if (sq === idx(7, 7)) next.castling.wk = false;
+      if (sq === idx(0, 0)) next.castling.bq = false;
+      if (sq === idx(0, 7)) next.castling.bk = false;
+    });
+
+    next.ep = mv.double ? idx((rowOf(mv.from) + rowOf(mv.to)) / 2, colOf(mv.from)) : -1;
+    next.turn = color === 'w' ? 'b' : 'w';
+    next.lastMove = { from: mv.from, to: mv.to };
+    return next;
+  }
+
+  function legalMoves(st, color) {
+    var side = color || st.turn;
+    return pseudoMoves(st, side).filter(function (mv) {
+      return !inCheck(applyMove(st, mv), side);
+    });
+  }
+
+  /* ---- chess AI: minimax + alpha-beta ---- */
+
+  var VALUE = { P: 100, N: 320, B: 330, R: 500, Q: 900, K: 20000 };
+  var MATE = 100000;
+
+  function evaluate(st) {
+    var score = 0;
+    for (var i = 0; i < 64; i++) {
+      var p = st.board[i];
+      if (!p) continue;
+      var v = VALUE[pType(p)];
+      if (pType(p) !== 'K') {
+        var dr = Math.abs(rowOf(i) - 3.5), dc = Math.abs(colOf(i) - 3.5);
+        v += (7 - dr - dc) * 4;
+      }
+      score += pColor(p) === 'w' ? v : -v;
+    }
+    return score;
+  }
+
+  function orderMoves(moves) {
+    return moves.slice().sort(function (a, b) {
+      return (b.captured ? VALUE[pType(b.captured)] : 0) - (a.captured ? VALUE[pType(a.captured)] : 0);
+    });
+  }
+
+  function search(st, depth, alpha, beta) {
+    var moves = legalMoves(st, st.turn);
+    if (!moves.length) {
+      if (inCheck(st, st.turn)) return st.turn === 'w' ? -MATE - depth : MATE + depth;
+      return 0;
+    }
+    if (depth === 0) return evaluate(st);
+
+    moves = orderMoves(moves);
+    var maximizing = st.turn === 'w';
+    var best = maximizing ? -Infinity : Infinity;
+
+    for (var i = 0; i < moves.length; i++) {
+      var score = search(applyMove(st, moves[i]), depth - 1, alpha, beta);
+      if (maximizing) {
+        if (score > best) best = score;
+        if (best > alpha) alpha = best;
+      } else {
+        if (score < best) best = score;
+        if (best < beta) beta = best;
+      }
+      if (beta <= alpha) break;
+    }
+    return best;
+  }
+
+  function chessBestMove(st, depth) {
+    var moves = orderMoves(legalMoves(st, st.turn));
+    if (!moves.length) return null;
+
+    var maximizing = st.turn === 'w';
+    var best = maximizing ? -Infinity : Infinity;
+    var picks = [];
+
+    for (var i = 0; i < moves.length; i++) {
+      var score = search(applyMove(st, moves[i]), depth - 1, -Infinity, Infinity);
+      if (score === best) {
+        picks.push(moves[i]);
+      } else if (maximizing ? score > best : score < best) {
+        best = score;
+        picks = [moves[i]];
+      }
+    }
+    return picks[Math.floor(Math.random() * picks.length)];
+  }
+
+  /* ---- chess UI ---- */
+
+  var cState, cOver, cAi, cLocked, cSelected, cTargets, cScores, cCaptured, cGen = 0;
+  var cBoardEl = document.getElementById('chess-board');
+  var cStatusEl = document.getElementById('chess-status');
+  var cSqEls = [];
+  var HUMAN_SIDE = 'w';
+
+  function initChess() {
+    cScores = { w: 0, b: 0, draw: 0 };
+    cAi = false;
+
+    cBoardEl.innerHTML = '';
+    cSqEls = [];
+    for (var i = 0; i < 64; i++) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'sq';
+      btn.dataset.index = i;
+      btn.setAttribute('role', 'gridcell');
+      btn.addEventListener('click', onSquareClick);
+      cBoardEl.appendChild(btn);
+      cSqEls.push(btn);
+    }
+
+    document.getElementById('chess-restart-btn').addEventListener('click', function () {
+      logSys('chess: manual restart triggered by operator.');
+      chessReset();
+    });
+
+    document.getElementById('chess-ai-btn').addEventListener('click', function () {
+      cAi = !cAi;
+      setToggleLabel(this, cAi);
+      document.getElementById('chess-p2-label').textContent = cAi ? 'BLACK / SYSTEM_AI' : 'BLACK / PLAYER_2';
+      logSys('chess: opponent set to ' + (cAi ? 'SYSTEM_AI' : 'HUMAN') + '. board reset.');
+      chessReset();
+    });
+
+    chessReset();
+  }
+
+  function chessReset() {
+    cGen++;
+    cState = initialState();
+    cOver = false;
+    cLocked = false;
+    cSelected = -1;
+    cTargets = [];
+    cCaptured = { w: [], b: [] };
+    document.getElementById('chess-restart-btn').classList.remove('pulse');
+    renderChess();
+    updateChessStatus();
+  }
+
+  function humanTurn() {
+    return !cAi || cState.turn === HUMAN_SIDE;
+  }
+
+  function renderChess() {
+    var checkedKing = cOver ? -1 : (inCheck(cState, cState.turn) ? findKing(cState.board, cState.turn) : -1);
+
+    for (var i = 0; i < 64; i++) {
+      var el = cSqEls[i];
+      var p = cState.board[i];
+      var cls = 'sq ' + ((rowOf(i) + colOf(i)) % 2 === 0 ? 'dark' : 'light');
+
+      if (p) cls += pColor(p) === 'w' ? ' wp' : ' bp';
+      if (i === cSelected) cls += ' selected';
+      if (cState.lastMove && (i === cState.lastMove.from || i === cState.lastMove.to)) cls += ' last-move';
+      if (i === checkedKing) cls += ' in-check';
+
+      var target = cTargets.find(function (m) { return m.to === i; });
+      if (target) cls += target.captured ? ' target capture' : ' target';
+
+      el.className = cls;
+      el.textContent = p ? GLYPH[p] : '';
+      el.setAttribute('aria-label', sqName(i) + (p ? ', ' + (pColor(p) === 'w' ? 'white' : 'black') + ' ' + PIECE_NAME[pType(p)] : ', empty'));
+      el.disabled = cOver;
+    }
+
+    document.getElementById('cap-by-white').textContent = cCaptured.w.length ? cCaptured.w.join(' ') : '—';
+    document.getElementById('cap-by-black').textContent = cCaptured.b.length ? cCaptured.b.join(' ') : '—';
+  }
+
+  function sideLabel(color) {
+    if (color === 'w') return 'WHITE';
+    return cAi ? 'SYSTEM_AI' : 'BLACK';
+  }
+
+  function updateChessStatus() {
+    var tag = cState.turn === 'w' ? 'tag-w' : 'tag-b';
+    var line = '&gt; awaiting input from <span class="' + tag + '">' + sideLabel(cState.turn) + '</span>';
+    if (inCheck(cState, cState.turn)) {
+      line += '<br>&gt; <span class="tag-alert">' + sideLabel(cState.turn) + ' KING EXPOSED — CHECK</span>';
+    }
+    cStatusEl.innerHTML = line;
+  }
+
+  function onSquareClick(e) {
+    if (cOver || cLocked || !humanTurn()) return;
+    var i = +e.currentTarget.dataset.index;
+
+    var target = cTargets.find(function (m) { return m.to === i; });
+    if (target) {
+      playChessMove(target);
+      return;
+    }
+
+    var p = cState.board[i];
+    if (p && pColor(p) === cState.turn) {
+      cSelected = i;
+      cTargets = legalMoves(cState, cState.turn).filter(function (m) { return m.from === i; });
+    } else {
+      cSelected = -1;
+      cTargets = [];
+    }
+    renderChess();
+  }
+
+  function logChessMove(mv, color, piece) {
+    var who = sideLabel(color);
+    var cls = color === 'w' ? 'who-w' : 'who-b';
+    var text;
+
+    if (mv.castle) {
+      text = ' rerouted through ' + (mv.castle === 'k' ? 'kingside' : 'queenside') + ' castle';
+    } else {
+      text = ' moved ' + PIECE_NAME[pType(piece)] + ' ' + sqName(mv.from) + ' → ' + sqName(mv.to);
+      if (mv.captured) {
+        text += ' <span class="hit">// terminated ' + PIECE_NAME[pType(mv.captured)] + '</span>';
+      }
+      if (mv.promotion) text += ' <span class="hit">// privilege escalation → queen</span>';
+    }
+
+    pushLog('<span class="ts">[' + nowStamp() + ']</span> <span class="' + cls + '">' + who + '</span>' + text);
+  }
+
+  function playChessMove(mv) {
+    var color = cState.turn;
+    var piece = cState.board[mv.from];
+
+    if (mv.captured) cCaptured[color].push(GLYPH[mv.captured]);
+
+    cState = applyMove(cState, mv);
+    cSelected = -1;
+    cTargets = [];
+    logChessMove(mv, color, piece);
+    renderChess();
+
+    var replies = legalMoves(cState, cState.turn);
+    if (!replies.length) {
+      chessEnd(inCheck(cState, cState.turn) ? color : null);
+      return;
+    }
+
+    updateChessStatus();
+    maybeChessAiTurn();
+  }
+
+  function maybeChessAiTurn() {
+    if (!cAi || cOver || cState.turn === HUMAN_SIDE) return;
+    cLocked = true;
+    var gen = cGen;
+    scheduleAiMove(cStatusEl, function () {
+      if (gen !== cGen) return;
+      var mv = chessBestMove(cState, 3);
+      cLocked = false;
+      if (mv) playChessMove(mv);
+    });
+  }
+
+  function chessEnd(winner) {
+    cOver = true;
+    renderChess();
+
+    if (winner) {
+      cScores[winner]++;
+      var tag = winner === 'w' ? 'tag-w' : 'tag-b';
+      cStatusEl.innerHTML = '&gt; CHECKMATE — <span class="' + tag + '">' + sideLabel(winner) +
+        '</span> <span class="tag-win">seized the root key</span>';
+      logSys('chess: checkmate. ' + sideLabel(winner) + ' seized the root key.');
+    } else {
+      cScores.draw++;
+      cStatusEl.innerHTML = '&gt; <span class="tag-draw">STALEMATE — no legal exploit remains</span>';
+      logSys('chess: stalemate. session deadlocked.');
+    }
+
+    document.getElementById('score-w').textContent = cScores.w;
+    document.getElementById('score-b').textContent = cScores.b;
+    document.getElementById('score-cd').textContent = cScores.draw;
+    document.getElementById('chess-restart-btn').classList.add('pulse');
+  }
+
+  runBoot();
+})();
+</script>

@@ -632,6 +632,7 @@
     .scoreboard { width: 100%; justify-content: space-between; font-size: 0.72rem; }
 
     #log-feed { max-height: 32vh; }
+    .log-panel { min-height: 0; }
   }
 </style>
 
@@ -781,7 +782,8 @@
     if (reduceMotion) {
       for (var k = 0; k < 6; k++) frame();
     } else {
-      setInterval(frame, 45);
+      // on phones (<=560px) the window covers the whole screen, the rain is not visible
+      setInterval(function () { if (window.innerWidth > 560) frame(); }, 45);
     }
   })();
 
@@ -798,6 +800,7 @@
     d.className = 'log-entry' + (cls ? ' ' + cls : '');
     d.innerHTML = html;
     logEl.appendChild(d);
+    while (logEl.children.length > 200) logEl.removeChild(logEl.firstChild);
     logEl.scrollTop = logEl.scrollHeight;
   }
 
@@ -1444,6 +1447,7 @@
   /* ---- chess UI ---- */
 
   var cState, cOver, cAi, cLocked, cSelected, cTargets, cScores, cCaptured, cGen = 0;
+  var cHalfmoves, cPositions;
   var cBoardEl = document.getElementById('chess-board');
   var cStatusEl = document.getElementById('chess-status');
   var cSqEls = [];
@@ -1490,6 +1494,9 @@
     cSelected = -1;
     cTargets = [];
     cCaptured = { w: [], b: [] };
+    cHalfmoves = 0;
+    cPositions = {};
+    cPositions[positionKey(cState)] = 1;
     document.getElementById('chess-restart-btn').classList.remove('pulse');
     renderChess();
     updateChessStatus();
@@ -1505,7 +1512,7 @@
     for (var i = 0; i < 64; i++) {
       var el = cSqEls[i];
       var p = cState.board[i];
-      var cls = 'sq ' + ((rowOf(i) + colOf(i)) % 2 === 0 ? 'dark' : 'light');
+      var cls = 'sq ' + ((rowOf(i) + colOf(i)) % 2 === 0 ? 'light' : 'dark');
 
       if (p) cls += pColor(p) === 'w' ? ' wp' : ' bp';
       if (i === cSelected) cls += ' selected';
@@ -1585,6 +1592,9 @@
     if (mv.captured) cCaptured[color].push(GLYPH[mv.captured]);
 
     cState = applyMove(cState, mv);
+    cHalfmoves = (pType(piece) === 'P' || mv.captured) ? 0 : cHalfmoves + 1;
+    var key = positionKey(cState);
+    cPositions[key] = (cPositions[key] || 0) + 1;
     cSelected = -1;
     cTargets = [];
     logChessMove(mv, color, piece);
@@ -1595,6 +1605,9 @@
       chessEnd(inCheck(cState, cState.turn) ? color : null);
       return;
     }
+    if (insufficientMaterial(cState.board)) { chessEnd(null, 'material'); return; }
+    if (cPositions[key] >= 3) { chessEnd(null, 'repetition'); return; }
+    if (cHalfmoves >= 100) { chessEnd(null, 'fifty'); return; }
 
     updateChessStatus();
     maybeChessAiTurn();
@@ -1612,7 +1625,26 @@
     });
   }
 
-  function chessEnd(winner) {
+  function positionKey(st) {
+    var c = st.castling;
+    return st.board.map(function (p) { return p || '.'; }).join('') + st.turn +
+      (c.wk ? 'K' : '') + (c.wq ? 'Q' : '') + (c.bk ? 'k' : '') + (c.bq ? 'q' : '') + st.ep;
+  }
+
+  // only kings left, or kings plus a single bishop/knight - nobody can mate
+  function insufficientMaterial(b) {
+    var rest = b.filter(function (p) { return p && pType(p) !== 'K'; });
+    return rest.length === 0 || (rest.length === 1 && (pType(rest[0]) === 'B' || pType(rest[0]) === 'N'));
+  }
+
+  var DRAW_TEXT = {
+    stalemate: ['STALEMATE — no legal exploit remains', 'stalemate. session deadlocked.'],
+    material: ['DRAW — not enough firepower to breach', 'draw by insufficient material.'],
+    repetition: ['DRAW — same position looped three times', 'draw by threefold repetition.'],
+    fifty: ['DRAW — 50 moves without a capture or pawn push', 'draw by the fifty-move rule.']
+  };
+
+  function chessEnd(winner, reason) {
     cOver = true;
     renderChess();
 
@@ -1624,8 +1656,9 @@
       logSys('chess: checkmate. ' + sideLabel(winner) + ' seized the root key.');
     } else {
       cScores.draw++;
-      cStatusEl.innerHTML = '&gt; <span class="tag-draw">STALEMATE — no legal exploit remains</span>';
-      logSys('chess: stalemate. session deadlocked.');
+      var draw = DRAW_TEXT[reason || 'stalemate'];
+      cStatusEl.innerHTML = '&gt; <span class="tag-draw">' + draw[0] + '</span>';
+      logSys('chess: ' + draw[1]);
     }
 
     document.getElementById('score-w').textContent = cScores.w;

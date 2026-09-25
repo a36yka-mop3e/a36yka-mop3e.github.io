@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Хребет - горный забег 42 км</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23FFC400'/%3E%3Cpath d='M18 16h28a6 6 0 0 1 6 6v16a6 6 0 0 1-6 6H30l-10 8v-8h-2a6 6 0 0 1-6-6V22a6 6 0 0 1 6-6z' fill='%23161511'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas id="scene" aria-hidden="true"></canvas>
+
+<header class="top">
+  <a class="back" href="../index.html#works">← к портфолио</a>
+  <span class="logo">Хребет</span>
+  <a class="reg-link" href="#register">Регистрация</a>
+</header>
+
+<main id="story">
+  <section class="hero">
+    <p class="kicker">горный забег · 11 октября</p>
+    <h1><span>42 км</span> <span>по гребню</span></h1>
+    <p class="lead">Трасса идёт по хребту от посёлка до перевала и обратно в долину. Прокрутите вниз, чтобы пройти её</p>
+  </section>
+
+  <section class="chapter" data-km="0">
+    <span class="tag">0 км · старт</span>
+    <h2>Старт на рассвете</h2>
+    <p>Уходим в 6:30 из посёлка у подножия. Первые километры по лесной дороге, можно разогнаться</p>
+  </section>
+  <section class="chapter right" data-km="9">
+    <span class="tag">9 км · подъём</span>
+    <h2>Выход на гребень</h2>
+    <p>Самый крутой участок: 700 метров вверх за четыре километра. Здесь решается, как пройдёт весь день</p>
+  </section>
+  <section class="chapter" data-km="21">
+    <span class="tag">21 км · гребень</span>
+    <h2>Двенадцать километров по краю</h2>
+    <p>Узкая тропа, с обеих сторон обрыв и облака ниже вас. Пункт питания на перевале</p>
+  </section>
+  <section class="chapter right" data-km="36">
+    <span class="tag">36 км · спуск</span>
+    <h2>Вниз в долину</h2>
+    <p>Спуск по курумнику и лиственничному лесу. Колени скажут спасибо за тренировки</p>
+  </section>
+
+  <section class="final" id="register">
+    <div class="panel">
+      <h2>Регистрация открыта до&nbsp;1&nbsp;октября</h2>
+      <p>Лимит 400 участников. Нужен опыт хотя бы одного забега от 21 км</p>
+      <a class="cta" href="#register">Зарегистрироваться</a>
+    </div>
+    <small>концепт сайта · забег вымышленный</small>
+  </section>
+</main>
+
+<aside class="hud" aria-label="Положение на трассе">
+  <div class="readout">
+    <span><b id="km">0,0</b> км</span>
+    <span><b id="alt">1 180</b> м</span>
+  </div>
+  <div class="profile-wrap">
+    <svg class="profile" id="profile" viewBox="0 0 300 60" preserveAspectRatio="none">
+      <path class="area"/><path class="line"/><path class="done" pathLength="1"/>
+    </svg>
+    <span class="dot" id="dot"></span>
+  </div>
+</aside>
+
+<script src="gsap.min.js"></script>
+<script src="ScrollTrigger.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

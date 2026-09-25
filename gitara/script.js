@@ -9,91 +9,238 @@ document.querySelectorAll(".split").forEach(el => {
     .map(w => `<span class="w"><span>${w}</span></span>`).join(" ");
 });
 
-/* ---------- струны ---------- */
-// ноты открытых струн, от шестой к первой
+/* ---------- гриф и струны ---------- */
+// стандартный строй, открытые струны от шестой к первой: E2 A2 D3 G3 B3 E4
 const NOTES = [82.41, 110, 146.83, 196, 246.94, 329.63];
+const LETTERS = ["E", "A", "D", "G", "B", "e"];
+const FRETS = 6;
+// аппликатуры первой позиции, от 6-й струны к 1-й; -1 = струну не играем
+const CHORDS = {
+  Em: [0, 2, 2, 0, 0, 0], Am: [-1, 0, 2, 2, 1, 0], C: [-1, 3, 2, 0, 1, 0],
+  G: [3, 2, 0, 0, 0, 3], D: [-1, -1, 0, 2, 3, 2], E: [0, 2, 2, 1, 0, 0]
+};
+let chord = null; // null = свободно: звучит лад под курсором
+
 const svg = document.getElementById("strings");
-let W = 0, H = 0;
+const mk = (tag, cls) => { const el = document.createElementNS(SVG_NS, tag); if (cls) el.setAttribute("class", cls); return el; };
+const neck = mk("g"), fingers = mk("g");
+neck.id = "neck";
+svg.appendChild(neck);
+let W = 0, H = 0, nutX = 0, fretX = [], neckTop = 0, neckBottom = 0, zoneBand = null;
 const strings = NOTES.map((freq, i) => {
-  const path = document.createElementNS(SVG_NS, "path");
+  const path = mk("path");
   path.setAttribute("stroke-width", (3.4 - i * 0.45).toFixed(2));
-  svg.appendChild(path);
-  return { freq, path, y: 0, amp: 0, cx: 0 };
+  const label = mk("text", "note");
+  label.setAttribute("text-anchor", "end");
+  label.textContent = LETTERS[i];
+  svg.append(path, label);
+  return { freq, path, label, i, y: 0, amp: 0, cx: 0 };
 });
+svg.appendChild(fingers); // точки-пальцы поверх струн
 
 const heroText = document.querySelector(".hero-text");
 const soundhole = document.querySelector(".soundhole");
+const small = () => W < 768;
+
+// лад под точкой x: левее порожка и правее последнего лада - открытая струна
+function fretAt(x) {
+  if (x < nutX) return 0;
+  for (let n = 1; n <= FRETS; n++) if (x < fretX[n - 1]) return n;
+  return 0;
+}
+// где палец прижимает струну на ладу n: чуть левее металлического порожка
+const fingerX = n => { const a = n === 1 ? nutX : fretX[n - 2], b = fretX[n - 1]; return b - (b - a) * .38; };
 
 function layoutStrings() {
   W = svg.clientWidth; H = svg.clientHeight;
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-  // струны всегда под текстом, чтобы не перечёркивать заголовок
+  // струны под текстом; снизу место под кнопки аккордов
   const textBottom = heroText.offsetTop + heroText.offsetHeight;
-  const top = Math.max(textBottom + 40, H * 0.58);
-  const gap = Math.min(H * 0.045, (H - 70 - top) / 5);
+  const top = Math.max(textBottom + 44, H * .5);
+  const gap = Math.max(18, Math.min(H * .05, (H - (small() ? 190 : 160) - top) / 5.5));
   strings.forEach((s, i) => { s.y = top + i * gap; s.cx = W / 2; draw(s); });
+
+  // гриф: лады сужаются к корпусу, как на настоящей гитаре (каждый следующий в 2^(1/12) раз короче)
+  nutX = small() ? 34 : Math.max(60, W * .06);
+  const neckEnd = W * (small() ? .86 : .66);
+  const total = 1 - Math.pow(2, -FRETS / 12);
+  fretX = Array.from({ length: FRETS }, (_, k) => nutX + (neckEnd - nutX) * (1 - Math.pow(2, -(k + 1) / 12)) / total);
+  neckTop = top - gap * .6; neckBottom = top + gap * 5.6;
+
+  neck.replaceChildren();
+  const board = mk("rect", "board");
+  board.setAttribute("x", nutX); board.setAttribute("y", neckTop);
+  board.setAttribute("width", neckEnd - nutX + 14); board.setAttribute("height", neckBottom - neckTop);
+  board.setAttribute("rx", 4);
+  zoneBand = mk("rect", "zone");
+  zoneBand.setAttribute("y", neckTop); zoneBand.setAttribute("height", neckBottom - neckTop);
+  zoneBand.setAttribute("width", 0);
+  const nut = mk("rect", "nut");
+  nut.setAttribute("x", nutX - 6); nut.setAttribute("y", neckTop - 2); nut.setAttribute("width", 7); nut.setAttribute("height", neckBottom - neckTop + 4);
+  neck.append(board, zoneBand, nut);
+  fretX.forEach((x, k) => {
+    const f = mk("rect", "fret");
+    f.setAttribute("x", x - 1.5); f.setAttribute("y", neckTop); f.setAttribute("width", 3); f.setAttribute("height", neckBottom - neckTop);
+    const num = mk("text", "fret-num");
+    num.setAttribute("x", (k ? fretX[k - 1] : nutX) + (x - (k ? fretX[k - 1] : nutX)) / 2);
+    num.setAttribute("y", neckBottom + 18); num.setAttribute("text-anchor", "middle");
+    num.textContent = k + 1;
+    neck.append(f, num);
+  });
+  // перламутровые метки на 3-м и 5-м ладу
+  [3, 5].forEach(n => {
+    const d = mk("circle", "inlay");
+    d.setAttribute("cx", (fretX[n - 2] + fretX[n - 1]) / 2); d.setAttribute("cy", (strings[2].y + strings[3].y) / 2);
+    d.setAttribute("r", Math.max(4, gap * .2));
+    neck.append(d);
+  });
+  strings.forEach(s => { s.label.setAttribute("x", nutX - 14); s.label.setAttribute("y", s.y + 4); });
+
   soundhole.style.top = (top + gap * 2.5) + "px";
+  soundhole.style.left = (small() ? W * 1.02 : W * .84) + "px";
+  renderChord(false);
 }
 function draw(s) {
   // квадратичная кривая: вершина изгиба в половину смещения контрольной точки
   s.path.setAttribute("d", `M0 ${s.y} Q ${s.cx} ${s.y + s.amp * 2} ${W} ${s.y}`);
 }
 
-function pluck(s, x, dir, force) {
+// пальцы аккорда на грифе и крестики у заглушённых струн
+function renderChord(animate = true) {
+  fingers.replaceChildren();
+  strings.forEach(s => {
+    const f = chord ? CHORDS[chord][s.i] : 0;
+    s.label.textContent = f === -1 ? "×" : LETTERS[s.i];
+    s.label.classList.toggle("muted", f === -1);
+    s.path.classList.toggle("muted", f === -1);
+    if (f > 0) {
+      const dot = mk("circle", "finger");
+      dot.setAttribute("cx", fingerX(f)); dot.setAttribute("cy", s.y);
+      dot.setAttribute("r", Math.max(7, (strings[1].y - strings[0].y) * .34));
+      fingers.appendChild(dot);
+      if (animate) gsap.from(dot, { attr: { r: 0 }, duration: .35, delay: s.i * .04, ease: "back.out(2.5)" });
+    }
+  });
+}
+
+// в свободном режиме подсвечиваем лад под курсором
+function showZone(x) {
+  if (!zoneBand) return;
+  const n = chord ? 0 : fretAt(x);
+  if (!n) { zoneBand.setAttribute("width", 0); return; }
+  const a = n === 1 ? nutX : fretX[n - 2];
+  zoneBand.setAttribute("x", a); zoneBand.setAttribute("width", fretX[n - 1] - a);
+}
+
+// force от 0 (еле задел) до 1 (резко махнул): от неё зависят размах, громкость и звонкость
+function pluck(s, x, dir, force, delayMs = 0) {
+  const fret = chord ? CHORDS[chord][s.i] : fretAt(x);
   gsap.killTweensOf(s);
   s.cx = x;
-  gsap.fromTo(s, { amp: dir * Math.min(22, 8 + force) }, {
-    amp: 0, duration: 1.8, ease: "elastic.out(1, 0.05)", onUpdate: () => draw(s)
+  // заглушённая струна только глухо дёргается и молчит
+  gsap.fromTo(s, { amp: dir * (fret === -1 ? 2 : 4 + force * 20) }, {
+    amp: 0, duration: fret === -1 ? .3 : 1.2 + force, delay: delayMs / 1000, ease: "elastic.out(1, 0.05)", onUpdate: () => draw(s)
   });
-  playNote(s.freq, force);
+  if (fret === -1) return;
+  // в свободном режиме на мгновение показываем, где прижата струна
+  if (!chord && fret > 0) {
+    const dot = mk("circle", "finger ghost");
+    dot.setAttribute("cx", fingerX(fret)); dot.setAttribute("cy", s.y);
+    dot.setAttribute("r", Math.max(6, (strings[1].y - strings[0].y) * .28));
+    fingers.appendChild(dot);
+    gsap.to(dot, { opacity: 0, duration: .9, delay: .15 + delayMs / 1000, onComplete: () => dot.remove() });
+  }
+  // каждый лад на полтона выше: частота умножается на 2^(лад/12)
+  playNote(s, s.freq * Math.pow(2, fret / 12), force, delayMs);
 }
 
 let prev = null;
 svg.addEventListener("pointermove", e => {
   const r = svg.getBoundingClientRect();
-  const p = { x: e.clientX - r.left, y: e.clientY - r.top };
+  const p = { x: e.clientX - r.left, y: e.clientY - r.top, t: e.timeStamp };
+  showZone(p.x);
   if (prev) {
+    // сила = скорость движения поперёк струн, px/мс: медленно ~0.1, резкий взмах ~3
+    const dt = Math.max(p.t - prev.t, 4);
+    const force = Math.min(1, Math.max(.06, Math.abs(p.y - prev.y) / dt / 2.5));
     strings.forEach(s => {
-      if ((prev.y - s.y) * (p.y - s.y) < 0) pluck(s, p.x, Math.sign(p.y - prev.y), Math.abs(p.y - prev.y));
+      if ((prev.y - s.y) * (p.y - s.y) < 0) {
+        // струна, которую мышь пересекла позже, и звучит позже - получается перебор, а не удар разом
+        const k = (s.y - prev.y) / (p.y - prev.y);
+        pluck(s, prev.x + (p.x - prev.x) * k, Math.sign(p.y - prev.y), force, k * dt);
+      }
     });
   }
   prev = p;
 });
-svg.addEventListener("pointerleave", () => { prev = null; });
+svg.addEventListener("pointerleave", () => { prev = null; showZone(-1); });
 // на телефоне мыши нет - струна дёргается касанием рядом с ней
 svg.addEventListener("pointerdown", e => {
   if (e.pointerType === "mouse") return;
   const r = svg.getBoundingClientRect(), y = e.clientY - r.top;
   const near = strings.reduce((a, b) => Math.abs(a.y - y) < Math.abs(b.y - y) ? a : b);
-  if (Math.abs(near.y - y) < 24) pluck(near, e.clientX - r.left, 1, 14);
+  if (Math.abs(near.y - y) < 24) pluck(near, e.clientX - r.left, 1, .55);
 });
-if (window.matchMedia("(hover: none)").matches) {
-  document.querySelector(".hint").textContent = "коснитесь струны";
-}
 window.addEventListener("resize", layoutStrings);
 layoutStrings();
 
 /* ---------- звук: синтез щипка (алгоритм Карплуса-Стронга), без файлов ---------- */
-let audio = null;
+// строй стандартный: 6-я E2 82,41 Гц ... 1-я E4 329,63 Гц
+let audio = null, master = null;
 const buffers = new Map();
 const soundBtn = document.getElementById("sound");
+const heroSound = document.getElementById("heroSound");
+const hint = document.getElementById("hint");
+const touch = window.matchMedia("(hover: none)").matches;
+const soundOn = () => audio && soundBtn.getAttribute("aria-pressed") === "true";
+function hintText() {
+  if (chord) return `аккорд ${chord} зажат: ${touch ? "касайтесь струн" : "проведите по струнам"}`;
+  return touch ? "коснитесь струны над нужным ладом" : "проведите по струнам: какой лад под курсором, тот и звучит. Чем резче, тем громче";
+}
 
-soundBtn.addEventListener("click", () => {
-  if (!audio) {
-    audio = new AudioContext();
-    NOTES.forEach(f => buffers.set(f, makePluck(f)));
-  }
-  const on = soundBtn.getAttribute("aria-pressed") !== "true";
-  soundBtn.setAttribute("aria-pressed", on);
-  soundBtn.textContent = on ? "Звук вкл" : "Звук выкл";
-  if (on) audio.resume();
-});
+function ensureAudio() {
+  if (audio) return;
+  audio = new AudioContext();
+  // ограничитель: если резко провести по всем шести, звук не хрипит
+  master = audio.createDynamicsCompressor();
+  master.threshold.value = -10; master.ratio.value = 8;
+  master.connect(audio.destination);
+}
+// звук по умолчанию выключен; две кнопки - в шапке и у струн - всегда показывают одно и то же
+function setSound(on) {
+  if (on) { ensureAudio(); audio.resume(); }
+  [soundBtn, heroSound].forEach(b => b.setAttribute("aria-pressed", on));
+  soundBtn.textContent = on ? "Звук вкл" : "Включить звук";
+  heroSound.querySelector("span").textContent = on ? "Звук включён" : "Включить звук";
+}
+soundBtn.addEventListener("click", () => setSound(!soundOn()));
+heroSound.addEventListener("click", () => setSound(!soundOn()));
+setSound(false);
+hint.textContent = hintText();
+
+// аккорды: выбрал - на грифе появились пальцы, провёл по струнам - сыграл аккорд
+document.querySelectorAll(".chords button").forEach(b => b.addEventListener("click", () => {
+  chord = b.dataset.chord || null;
+  document.querySelectorAll(".chords button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  renderChord();
+  showZone(-1);
+  hint.textContent = hintText();
+}));
+
+// дёрнули струну с выключенным звуком - подмигиваем кнопкой, но не чаще раза в 3 секунды
+let nudgedAt = 0;
+function nudgeSound() {
+  if (performance.now() - nudgedAt < 3000) return;
+  nudgedAt = performance.now();
+  gsap.fromTo([soundBtn, heroSound], { scale: 1 }, { scale: 1.12, duration: .18, yoyo: true, repeat: 3, ease: "power1.inOut" });
+}
 
 // damp - как долго звенит струна: у большого корпуса сустейн длиннее
 function makePluck(freq, damp = 0.4985) {
   const rate = audio.sampleRate, len = Math.floor(rate * 2.6);
   const buf = audio.createBuffer(1, len, rate), out = buf.getChannelData(0);
-  const period = Math.round(rate / freq), ring = new Float32Array(period);
+  // усреднение соседних отсчётов удлиняет период на полотсчёта - вычитаем, чтобы нота не занижалась
+  const period = Math.max(2, Math.round(rate / freq - .5)), ring = new Float32Array(period);
   for (let i = 0; i < period; i++) ring[i] = Math.random() * 2 - 1;
   for (let i = 0; i < len; i++) {
     const j = i % period, next = (j + 1) % period;
@@ -103,13 +250,25 @@ function makePluck(freq, damp = 0.4985) {
   return buf;
 }
 
-function playNote(freq, force) {
-  if (!audio || soundBtn.getAttribute("aria-pressed") !== "true") return;
-  const src = audio.createBufferSource(), gain = audio.createGain();
-  src.buffer = buffers.get(freq);
-  gain.gain.value = Math.min(0.35, 0.08 + force / 120);
-  src.connect(gain).connect(audio.destination);
-  src.start();
+function playNote(s, freq, force, delayMs = 0) {
+  if (!soundOn()) { nudgeSound(); return; }
+  // звук каждой ноты синтезируем один раз и дальше берём готовый
+  const key = freq.toFixed(2);
+  if (!buffers.has(key)) buffers.set(key, makePluck(freq));
+  const t = audio.currentTime + delayMs / 1000;
+  // струна не звучит двумя голосами сразу: прошлый звук глушим, как пальцем
+  if (s.voice) {
+    s.voice.gain.gain.setTargetAtTime(0, t, .015);
+    s.voice.src.stop(t + .12);
+  }
+  const src = audio.createBufferSource(), tone = audio.createBiquadFilter(), gain = audio.createGain();
+  src.buffer = buffers.get(key);
+  tone.type = "lowpass";
+  tone.frequency.value = 700 + force * 6000;        // резкий щипок звонче, мягкий глуше
+  gain.gain.value = .03 + Math.pow(force, 1.4) * .45; // еле задел - тихо, махнул - громко
+  src.connect(tone).connect(gain).connect(master);
+  src.start(t);
+  s.voice = { src, gain };
 }
 
 /* ---------- силуэты корпусов ---------- */
@@ -210,7 +369,7 @@ function drawScope() {
 }
 drawScope();
 listenBtn.addEventListener("click", () => {
-  if (!audio) { audio = new AudioContext(); NOTES.forEach(f => buffers.set(f, makePluck(f))); }
+  ensureAudio();
   audio.resume();
   if (!analyser) {
     analyser = audio.createAnalyser(); analyser.fftSize = 1024;
@@ -262,7 +421,8 @@ mm.add("(prefers-reduced-motion: no-preference)", () => {
     }, "<.1")
     .from(".hero h1 .w > span", { yPercent: 110, duration: .9, stagger: .045 }, "<.2")
     .from(".eyebrow, .lead", { y: 16, opacity: 0, duration: .7, stagger: .1 }, "-=.5")
-    .from(".hint", { opacity: 0, duration: .6 });
+    .from(".play", { y: 16, opacity: 0, duration: .6 });
+  tl.from("#neck", { opacity: 0, x: -40, duration: 1.2, ease: "expo.out" }, .15);
 
   // розетка чуть уезжает при прокрутке
   gsap.to(".soundhole", {

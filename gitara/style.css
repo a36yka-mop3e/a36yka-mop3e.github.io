@@ -79,7 +79,7 @@ h2 { font-family: var(--display); font-weight: 400; font-size: clamp(34px, 5vw, 
 
 .soundhole {
   position: absolute; z-index: 1;
-  width: min(46vh, 420px); aspect-ratio: 1;
+  width: min(36vh, 330px); aspect-ratio: 1;
   left: 72%; top: 62%; transform: translate(-50%, -50%);
 }
 .soundhole svg { width: 100%; height: 100%; }
@@ -88,11 +88,47 @@ h2 { font-family: var(--display); font-weight: 400; font-size: clamp(34px, 5vw, 
 .hole { fill: #0b0503; }
 
 .strings { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; cursor: crosshair; }
-.strings path { fill: none; stroke: var(--nickel); stroke-linecap: round; }
-.hint {
-  position: absolute; z-index: 3; left: 40px; bottom: 28px;
-  font: 12px var(--mono); color: var(--muted); letter-spacing: .08em;
+.strings path { fill: none; stroke: var(--nickel); stroke-linecap: round; transition: opacity .3s; }
+.strings path.muted { opacity: .35; }
+
+/* гриф: палисандр, металлические лады, костяной порожек, перламутровые метки */
+.board { fill: #1f100a; stroke: #3a2014; }
+.zone { fill: var(--honey); opacity: .14; transition: x .12s, width .12s; }
+.nut { fill: #efe3c8; }
+.fret { fill: #b9b3a8; }
+.inlay { fill: var(--abalone); opacity: .8; }
+.fret-num { font: 600 11px var(--mono); fill: var(--muted); }
+.note { font: 700 13px var(--mono); fill: var(--ink); }
+.note.muted { fill: #c9563b; }
+.finger { fill: var(--honey); stroke: var(--edge); stroke-width: 2; }
+.finger.ghost { fill: #f3ebdd; }
+
+/* панель под струнами: звук и аккорды */
+.play { position: absolute; z-index: 3; left: 40px; right: 40px; bottom: 24px; }
+.hint { font: 12px var(--mono); color: var(--muted); letter-spacing: .06em; margin-bottom: 10px; }
+.play-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.hero-sound {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+  font: 700 14px var(--body); color: var(--edge); background: var(--ink);
+  border: 0; border-radius: 30px; padding: 10px 18px 10px 14px;
+  transition: background .2s, transform .15s cubic-bezier(.34,1.56,.64,1);
 }
+.hero-sound:active { transform: scale(.95); }
+.hero-sound svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.hero-sound .spk { fill: currentColor; }
+.hero-sound .wave { display: none; }
+.hero-sound[aria-pressed="true"] { background: var(--abalone); color: #fff; }
+.hero-sound[aria-pressed="true"] .wave { display: inline; }
+.hero-sound[aria-pressed="true"] .off { display: none; }
+.chords { display: flex; gap: 6px; flex-wrap: wrap; }
+.chords button {
+  font: 600 13px var(--mono); color: var(--ink); background: #140b07b3; cursor: pointer;
+  border: 1px solid #6b4a33; border-radius: 20px; padding: 8px 13px;
+  transition: background .2s, color .2s, border-color .2s, transform .15s cubic-bezier(.34,1.56,.64,1);
+}
+.chords button:hover { border-color: var(--honey); }
+.chords button:active { transform: scale(.94); }
+.chords button[aria-pressed="true"] { background: var(--honey); border-color: var(--honey); color: var(--edge); }
 
 /* ---------- этапы ---------- */
 .process { background: var(--edge); }
@@ -268,8 +304,13 @@ button.cta { border: 0; cursor: pointer; font: 700 17px var(--body); }
   .top { padding: 14px 16px; gap: 14px; }
   .top nav { display: none; }
   .hero-text { padding: 13vh 16px 0; }
-  .soundhole { left: 74%; width: 62vw; }
-  .hint { left: 16px; }
+  .soundhole { width: 56vw; }
+  .play { left: 16px; right: 0; bottom: 18px; }
+  .play-row { flex-wrap: nowrap; gap: 8px; }
+  .hero-sound { flex-shrink: 0; padding: 9px 14px 9px 11px; }
+  .chords { flex-wrap: nowrap; overflow-x: auto; padding-right: 16px; scrollbar-width: none; }
+  .chords button { flex-shrink: 0; }
+  .hint { padding-right: 16px; }
   .process-pin { height: auto; padding: 100px 0; }
   .process-head { padding: 0 16px 40px; }
   .bar { display: none; }

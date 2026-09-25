@@ -18,7 +18,7 @@
     <a href="#queue">Очередь</a>
     <a href="#visit">Прийти</a>
   </nav>
-  <button class="sound" id="sound" aria-pressed="false">Звук выкл</button>
+  <button class="sound" id="sound" aria-pressed="false">Включить звук</button>
 </header>
 
 <section class="hero" id="hero">
@@ -35,7 +35,24 @@
     </svg>
   </div>
   <svg class="strings" id="strings" aria-hidden="true"></svg>
-  <p class="hint">проведите мышкой по струнам</p>
+  <div class="play">
+    <p class="hint" id="hint"></p>
+    <div class="play-row">
+      <button type="button" class="hero-sound" id="heroSound" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16 9l5 6M21 9l-5 6"/></svg>
+        <span>Включить звук</span>
+      </button>
+      <div class="chords" role="group" aria-label="Аккорд">
+        <button type="button" data-chord="" aria-pressed="true">Лад под курсором</button>
+        <button type="button" data-chord="Em" aria-pressed="false">Em</button>
+        <button type="button" data-chord="Am" aria-pressed="false">Am</button>
+        <button type="button" data-chord="C" aria-pressed="false">C</button>
+        <button type="button" data-chord="G" aria-pressed="false">G</button>
+        <button type="button" data-chord="D" aria-pressed="false">D</button>
+        <button type="button" data-chord="E" aria-pressed="false">E</button>
+      </div>
+    </div>
+  </div>
 </section>
 
 <section class="facts-bar">

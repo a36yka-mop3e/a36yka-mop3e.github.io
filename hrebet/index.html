@@ -10,56 +10,185 @@
 <body>
 
 <canvas id="scene" aria-hidden="true"></canvas>
+<div class="labels" id="labels" aria-hidden="true"></div>
 
 <header class="top">
   <a class="back" href="../index.html#works">← В портфолио</a>
   <span class="logo">Хребет</span>
+  <nav class="nav">
+    <a href="#distances">Дистанции</a>
+    <a href="#schedule">Расписание</a>
+    <a href="#gear">Снаряжение</a>
+    <a href="#faq">Вопросы</a>
+  </nav>
   <a class="reg-link" href="#register">Регистрация</a>
 </header>
 
-<main id="story">
-  <section class="hero">
-    <p class="kicker">горный забег · 11 октября</p>
-    <h1><span>42 км</span> <span>по гребню</span></h1>
-    <p class="lead">Трасса идёт по хребту от посёлка до перевала и обратно в долину. Прокрутите вниз, чтобы пройти её</p>
-  </section>
+<main>
+  <div id="flight">
+    <section class="hero">
+      <p class="kicker">горный забег · 11 октября · 6-й сезон</p>
+      <h1><span>42 км</span> <span>по гребню</span></h1>
+      <p class="lead">Из посёлка на хребет, двенадцать километров по краю над облаками и вниз к озеру. Крутите вниз, и пройдёте трассу вместе с лидером</p>
+      <dl class="stats">
+        <div><dt>набор высоты</dt><dd>2 800 м</dd></div>
+        <div><dt>лимит времени</dt><dd>12 ч</dd></div>
+        <div><dt>участников</dt><dd>400</dd></div>
+        <div><dt>пунктов питания</dt><dd>4</dd></div>
+      </dl>
+      <p class="scroll-hint">крутите вниз</p>
+    </section>
 
-  <section class="chapter" data-km="0">
-    <span class="tag">0 км · старт</span>
-    <h2>Старт на рассвете</h2>
-    <p>Уходим в 6:30 из посёлка у подножия. Первые километры по лесной дороге, можно разогнаться</p>
-  </section>
-  <section class="chapter right" data-km="9">
-    <span class="tag">9 км · подъём</span>
-    <h2>Выход на гребень</h2>
-    <p>Самый крутой участок: 700 метров вверх за четыре километра. Здесь решается, как пройдёт весь день</p>
-  </section>
-  <section class="chapter" data-km="21">
-    <span class="tag">21 км · гребень</span>
-    <h2>Двенадцать километров по краю</h2>
-    <p>Узкая тропа, с обеих сторон обрыв и облака ниже вас. Пункт питания на перевале</p>
-  </section>
-  <section class="chapter right" data-km="36">
-    <span class="tag">36 км · спуск</span>
-    <h2>Вниз в долину</h2>
-    <p>Спуск по курумнику и лиственничному лесу. Колени скажут спасибо за тренировки</p>
-  </section>
+    <section class="chapter">
+      <span class="tag">0 км · старт</span>
+      <h2>Старт на рассвете</h2>
+      <p>Уходим в 6:30 из Сосновки. Первые километры по лесной дороге вдоль ручья: можно разогнаться, пока ноги свежие</p>
+      <ul class="facts"><li>покрытие <b>грунтовка</b></li><li>вода <b>на старте</b></li><li>отсечка <b>нет</b></li></ul>
+    </section>
+    <section class="chapter right">
+      <span class="tag">9 км · подъём</span>
+      <h2>Выход на гребень</h2>
+      <p>Самый крутой участок: семьсот метров вверх за четыре километра. Лес заканчивается, начинаются камни. Здесь решается, как пройдёт весь день</p>
+      <ul class="facts"><li>набор <b>+700 м</b></li><li>КП-1 <b>вода, изотоник</b></li><li>отсечка <b>9:30</b></li></ul>
+    </section>
+    <section class="chapter">
+      <span class="tag">21 км · гребень</span>
+      <h2>Двенадцать километров по краю</h2>
+      <p>Узкая тропа, с обеих сторон обрыв, облака ниже вас. На перевале Кедровом горячий бульон, врач и последний шанс сойти на машине</p>
+      <ul class="facts"><li>перевал <b>2 074 м</b></li><li>КП-2 <b>бульон, врач</b></li><li>отсечка <b>12:00</b></li></ul>
+    </section>
+    <section class="chapter right">
+      <span class="tag">36 км · спуск</span>
+      <h2>Вниз в долину</h2>
+      <p>Спуск по курумнику и лиственничному лесу. Колени скажут спасибо за тренировки, палки здесь очень кстати</p>
+      <ul class="facts"><li>сброс <b>−1 300 м</b></li><li>КП-3 <b>вода, фрукты</b></li><li>отсечка <b>14:00</b></li></ul>
+    </section>
+    <section class="chapter">
+      <span class="tag">42 км · финиш</span>
+      <h2>Финиш у озера</h2>
+      <p>Медаль из спила кедра, баня на берегу и ужин у костра. Финишный створ открыт до 18:30</p>
+      <ul class="facts"><li>рекорд трассы <b>4:51:07</b></li><li>среднее время <b>8:40</b></li><li>финишировали в прошлом году <b>91 %</b></li></ul>
+    </section>
+  </div>
 
-  <section class="final" id="register">
-    <div class="panel">
-      <h2>Регистрация открыта до&nbsp;1&nbsp;октября</h2>
-      <p>Лимит 400 участников. Нужен опыт хотя бы одного забега от 21 км</p>
-      <a class="cta" href="#register">Зарегистрироваться</a>
+  <div class="sheet" id="content">
+
+    <section class="block" id="distances">
+      <p class="eyebrow">дистанции</p>
+      <h2 class="h2">Три трассы на один день</h2>
+      <div class="dist-grid">
+        <article class="dist" data-from="0" data-to="1">
+          <div class="dist-head"><h3>Хребет</h3><span class="dist-km">42 км</span></div>
+          <svg class="dist-profile" viewBox="0 0 300 70" preserveAspectRatio="none"><path class="area"/><path class="line"/></svg>
+          <dl><div><dt>набор</dt><dd>2 800 м</dd></div><div><dt>лимит</dt><dd>12 ч</dd></div><div><dt>старт</dt><dd>6:30</dd></div></dl>
+          <p>Вся трасса целиком. Нужен финиш хотя бы одного забега от 21 км</p>
+          <div class="dist-foot"><b>6 500 ₽</b><a href="#register" data-pick="42">Выбрать</a></div>
+        </article>
+        <article class="dist" data-from="0.5" data-to="1">
+          <div class="dist-head"><h3>Полухребет</h3><span class="dist-km">21 км</span></div>
+          <svg class="dist-profile" viewBox="0 0 300 70" preserveAspectRatio="none"><path class="area"/><path class="line"/></svg>
+          <dl><div><dt>набор</dt><dd>450 м</dd></div><div><dt>лимит</dt><dd>7 ч</dd></div><div><dt>старт</dt><dd>8:00</dd></div></dl>
+          <p>Стартуете с перевала, куда участников привозят вахтовки. Гребень и спуск без самого тяжёлого подъёма</p>
+          <div class="dist-foot"><b>4 500 ₽</b><a href="#register" data-pick="21">Выбрать</a></div>
+        </article>
+        <article class="dist" data-from="0.76" data-to="1">
+          <div class="dist-head"><h3>Долина</h3><span class="dist-km">10 км</span></div>
+          <svg class="dist-profile" viewBox="0 0 300 70" preserveAspectRatio="none"><path class="area"/><path class="line"/></svg>
+          <dl><div><dt>набор</dt><dd>150 м</dd></div><div><dt>лимит</dt><dd>3 ч</dd></div><div><dt>старт</dt><dd>10:00</dd></div></dl>
+          <p>От КП-3 вниз к озеру. Для первого трейла и для тех, кто приехал поддержать своих</p>
+          <div class="dist-foot"><b>2 500 ₽</b><a href="#register" data-pick="10">Выбрать</a></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="block split" id="schedule">
+      <div>
+        <p class="eyebrow">расписание 11 октября</p>
+        <h2 class="h2">День гонки по часам</h2>
+        <p class="muted">Накануне, 10 октября, выдача номеров в Сосновке с 16:00 до 21:00 и брифинг в 20:00. Без брифинга на старт 42 км не пускаем</p>
+      </div>
+      <ol class="timeline">
+        <li><time>5:30</time><span>Открывается стартовый городок, горячий чай</span></li>
+        <li><time>6:30</time><span>Старт 42 км</span></li>
+        <li><time>8:00</time><span>Старт 21 км с перевала</span></li>
+        <li><time>10:00</time><span>Старт 10 км от КП-3</span></li>
+        <li><time>12:00</time><span>Закрытие перевала для 42 км</span></li>
+        <li><time>14:00</time><span>Закрытие КП-3</span></li>
+        <li><time>18:30</time><span>Финиш закрывается</span></li>
+        <li><time>19:00</time><span>Награждение и ужин у костра</span></li>
+      </ol>
+    </section>
+
+    <section class="block" id="gear">
+      <p class="eyebrow">обязательное снаряжение</p>
+      <h2 class="h2">Соберите рюкзак</h2>
+      <p class="muted">На гребне погода меняется за полчаса. Без этого набора на старт 42 км не выпустят: проверяем на выдаче номеров. Нажимайте на вещи, чтобы положить их в рюкзак</p>
+      <div class="pack">
+        <div class="pack-items" id="packItems">
+          <button type="button" data-g="320">Куртка-мембрана <small>320 г</small></button>
+          <button type="button" data-g="90">Налобный фонарь <small>90 г</small></button>
+          <button type="button" data-g="530">Вода 0,5 л <small>530 г</small></button>
+          <button type="button" data-g="180">Телефон с заряженной батареей <small>180 г</small></button>
+          <button type="button" data-g="10">Свисток <small>10 г</small></button>
+          <button type="button" data-g="60">Спасательное одеяло <small>60 г</small></button>
+          <button type="button" data-g="150">Аптечка: бинт и пластыри <small>150 г</small></button>
+          <button type="button" data-g="300">Еда на 300 ккал <small>300 г</small></button>
+        </div>
+        <div class="pack-state">
+          <div class="bag" id="bag"><span id="bagFill"></span></div>
+          <p class="pack-count"><b id="packN">0</b> из 8</p>
+          <p class="pack-weight">в рюкзаке <b id="packW">0</b> г</p>
+          <p class="pack-msg" id="packMsg">Пока на старт не пустят</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="register">
+      <p class="eyebrow">регистрация</p>
+      <h2 class="h2">Цена растёт ближе к старту</h2>
+      <div class="tiers">
+        <div class="tier past"><span>до 1 августа</span><b>4 200 ₽</b><small>закрыто</small></div>
+        <div class="tier past"><span>до 1 сентября</span><b>5 200 ₽</b><small>закрыто</small></div>
+        <div class="tier now"><span>до 1 октября</span><b>6 500 ₽</b><small>сейчас</small></div>
+      </div>
+      <div class="reg">
+        <div class="reg-pick" role="group" aria-label="Дистанция">
+          <button type="button" data-d="42" aria-pressed="true">42 км</button>
+          <button type="button" data-d="21" aria-pressed="false">21 км</button>
+          <button type="button" data-d="10" aria-pressed="false">10 км</button>
+        </div>
+        <p class="reg-price">Итого <b id="regPrice">6 500 ₽</b></p>
+        <p class="reg-note">В цене номер, чип хронометража, трансфер от финиша, медаль, баня и ужин. Осталось <b>63 места</b> из 400</p>
+        <button type="button" class="cta" id="regBtn">Зарегистрироваться</button>
+      </div>
+    </section>
+
+    <section class="block" id="faq">
+      <p class="eyebrow">вопросы</p>
+      <h2 class="h2">Что спрашивают перед стартом</h2>
+      <div class="faq">
+        <details><summary>Можно бежать с палками?</summary><p>Да, на всех дистанциях. Выбрасывать палки на трассе нельзя: что взяли на старт, то и несёте до финиша.</p></details>
+        <details><summary>Что будет, если не успею к отсечке?</summary><p>На КП снимут с дистанции и довезут до финиша на машине. В протоколе будет сход, медаль всё равно выдадим на ужине.</p></details>
+        <details><summary>Как добраться до Сосновки?</summary><p>Из города ходит автобус организаторов 10 октября в 12:00 и 15:00, место бронируется при регистрации. На машине парковка у стартового городка бесплатная.</p></details>
+        <details><summary>Можно передать слот другу?</summary><p>До 1 октября бесплатно, через личный кабинет. После этой даты передачи закрыты.</p></details>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <div>
+        <b>Хребет</b>
+        <p>Организатор: беговой клуб «Вертикаль». Сезон с 2021 года</p>
+      </div>
       <a class="back-bottom" href="../index.html#works">← Вернуться в портфолио</a>
-    </div>
-    <small>концепт сайта · забег вымышленный</small>
-  </section>
+      <small>концепт сайта · забег, клуб и места вымышленные</small>
+    </footer>
+  </div>
 </main>
 
 <aside class="hud" aria-label="Положение на трассе">
   <div class="readout">
     <span><b id="km">0,0</b> км</span>
-    <span><b id="alt">1 180</b> м</span>
+    <span><b id="alt">-</b> м</span>
   </div>
   <div class="profile-wrap">
     <svg class="profile" id="profile" viewBox="0 0 300 60" preserveAspectRatio="none">
@@ -68,6 +197,8 @@
     <span class="dot" id="dot"></span>
   </div>
 </aside>
+
+<div class="toast" id="toast" role="status" hidden></div>
 
 <script src="gsap.min.js"></script>
 <script src="ScrollTrigger.min.js"></script>

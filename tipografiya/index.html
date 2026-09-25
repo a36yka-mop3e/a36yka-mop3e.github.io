@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Оттиск - производство</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23FFC400'/%3E%3Cpath d='M18 16h28a6 6 0 0 1 6 6v16a6 6 0 0 1-6 6H30l-10 8v-8h-2a6 6 0 0 1-6-6V22a6 6 0 0 1 6-6z' fill='%23161511'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail" aria-label="Разделы">
+    <svg class="reg" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="11"/><path d="M20 2v36M2 20h36"/></svg>
+    <a href="#" class="rail-btn active" aria-label="Производство"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="11" rx="1"/><rect x="17" y="4" width="4" height="7" rx="1"/></svg></a>
+    <a href="#" class="rail-btn" aria-label="Клиенты"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-4 12.2-4 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18.5 20c0-2-1-3.4-2.5-4"/></svg></a>
+    <a href="#" class="rail-btn" aria-label="Склад бумаги"><svg viewBox="0 0 24 24"><path d="M4 7l8-4 8 4v10l-8 4-8-4zM4 7l8 4 8-4M12 11v10"/></svg></a>
+  </aside>
+
+  <main class="main">
+    <header class="bar">
+      <a class="back" href="../index.html#works">← В портфолио</a>
+      <div class="title">
+        <span class="brand">Оттиск</span>
+        <h1>Производство <span class="date">смена 26 сентября</span></h1>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="urgentOnly">
+        <span class="track"><span class="thumb"></span></span>
+        Только срочные
+      </label>
+      <button class="btn primary" id="newOrder">Новый заказ</button>
+    </header>
+
+    <section class="inks" aria-label="Краска в машине">
+      <span class="inks-label">Краска в машине</span>
+      <div class="ink" style="--c: var(--cyan)"><b>C</b><span class="level"><i data-v="72"></i></span><em>72 %</em></div>
+      <div class="ink" style="--c: var(--magenta)"><b>M</b><span class="level"><i data-v="38"></i></span><em>38 %</em></div>
+      <div class="ink" style="--c: var(--yellow)"><b>Y</b><span class="level"><i data-v="55"></i></span><em>55 %</em></div>
+      <div class="ink" style="--c: var(--key)"><b>K</b><span class="level"><i data-v="81"></i></span><em>81 %</em></div>
+    </section>
+
+    <section class="board" id="board">
+      <div class="col" data-col="0"><h2>Приём макета <span class="count">0</span></h2><div class="list"></div></div>
+      <div class="col" data-col="1"><h2>Печать <span class="count">0</span></h2><div class="list"></div></div>
+      <div class="col" data-col="2"><h2>Резка и сборка <span class="count">0</span></h2><div class="list"></div></div>
+      <div class="col done" data-col="3"><h2>Готово к выдаче <span class="count">0</span></h2><div class="list"></div></div>
+    </section>
+    <p class="note">перетащите карточку в другую колонку · концепт интерфейса, данные вымышленные</p>
+    <a class="back-bottom" href="../index.html#works">← Вернуться в портфолио</a>
+  </main>
+</div>
+
+<div class="backdrop" id="backdrop" hidden></div>
+<aside class="drawer" id="drawer" aria-label="Новый заказ" hidden>
+  <div class="drawer-head">
+    <h2>Новый заказ</h2>
+    <button class="icon-btn" id="closeDrawer" aria-label="Закрыть">×</button>
+  </div>
+  <form id="orderForm">
+    <label class="field"><span>Клиент</span><input name="client" value="Книжный «Переплёт»" required></label>
+    <label class="field"><span>Что печатаем</span><input name="product" value="Закладки 5×15 см" required></label>
+    <div class="row">
+      <label class="field"><span>Тираж, шт</span><input name="qty" type="number" value="1000" min="1" required></label>
+      <label class="field"><span>Сдать</span>
+        <select name="due"><option>сегодня 18:00</option><option selected>завтра</option><option>30 сен</option></select>
+      </label>
+    </div>
+    <label class="switch"><input type="checkbox" name="urgent"><span class="track"><span class="thumb"></span></span>Срочный</label>
+    <button class="btn primary submit" type="submit" data-state="idle">
+      <span class="label">Создать заказ</span>
+      <svg class="spinner" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>
+      <svg class="check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+    </button>
+  </form>
+</aside>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script src="gsap.min.js"></script>
+<script src="Flip.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

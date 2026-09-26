@@ -138,8 +138,9 @@ function pluck(s, x, dir, force, delayMs = 0) {
   gsap.killTweensOf(s);
   s.cx = x;
   // заглушённая струна только глухо дёргается и молчит
-  gsap.fromTo(s, { amp: dir * (fret === -1 ? 2 : 4 + force * 20) }, {
-    amp: 0, duration: fret === -1 ? .3 : 1.2 + force, delay: delayMs / 1000, ease: "elastic.out(1, 0.05)", onUpdate: () => draw(s)
+  // медленное касание - струна еле вздрагивает, резкий взмах - размашисто вибрирует
+  gsap.fromTo(s, { amp: dir * (fret === -1 ? 2 : 1 + Math.pow(force, 1.2) * 23) }, {
+    amp: 0, duration: fret === -1 ? .3 : .7 + force * 1.5, delay: delayMs / 1000, ease: "elastic.out(1, 0.05)", onUpdate: () => draw(s)
   });
   if (fret === -1) return;
   // в свободном режиме на мгновение показываем, где прижата струна
@@ -162,7 +163,7 @@ svg.addEventListener("pointermove", e => {
   if (prev) {
     // сила = скорость движения поперёк струн, px/мс: медленно ~0.1, резкий взмах ~3
     const dt = Math.max(p.t - prev.t, 4);
-    const force = Math.min(1, Math.max(.06, Math.abs(p.y - prev.y) / dt / 2.5));
+    const force = Math.min(1, Math.max(.02, Math.pow(Math.abs(p.y - prev.y) / dt / 2.5, 1.2)));
     strings.forEach(s => {
       if ((prev.y - s.y) * (p.y - s.y) < 0) {
         // струна, которую мышь пересекла позже, и звучит позже - получается перебор, а не удар разом
@@ -236,36 +237,54 @@ function nudgeSound() {
 }
 
 // damp - как долго звенит струна: у большого корпуса сустейн длиннее
-function makePluck(freq, damp = 0.4985) {
-  const rate = audio.sampleRate, len = Math.floor(rate * 2.6);
+// soft - сколько раз сгладить начальный шум: 0 = щелчок медиатора, 3 = мягко подушечкой пальца
+function makePluck(freq, damp = 0.4985, soft = 0) {
+  const rate = audio.sampleRate, len = Math.floor(rate * 4);
   const buf = audio.createBuffer(1, len, rate), out = buf.getChannelData(0);
   // усреднение соседних отсчётов удлиняет период на полотсчёта - вычитаем, чтобы нота не занижалась
   const period = Math.max(2, Math.round(rate / freq - .5)), ring = new Float32Array(period);
   for (let i = 0; i < period; i++) ring[i] = Math.random() * 2 - 1;
+  for (let pass = 0; pass < soft; pass++) {
+    for (let i = 0; i < period; i++) ring[i] = (ring[i] + ring[(i + 1) % period]) * .5;
+  }
+  const peak = ring.reduce((m, v) => Math.max(m, Math.abs(v)), 0) || 1;
+  for (let i = 0; i < period; i++) ring[i] /= peak;
   for (let i = 0; i < len; i++) {
     const j = i % period, next = (j + 1) % period;
     out[i] = ring[j];
     ring[j] = (ring[j] + ring[next]) * damp;
   }
+  // последние 0,4 с плавно уводим в ноль: звук гаснет, а не обрывается на конце записи
+  const fade = Math.floor(rate * .4);
+  for (let i = 0; i < fade; i++) out[len - fade + i] *= Math.cos(i / fade * Math.PI / 2);
   return buf;
 }
 
 function playNote(s, freq, force, delayMs = 0) {
   if (!soundOn()) { nudgeSound(); return; }
-  // звук каждой ноты синтезируем один раз и дальше берём готовый
-  const key = freq.toFixed(2);
-  if (!buffers.has(key)) buffers.set(key, makePluck(freq));
+  // три вида щипка: мягко пальцем, обычно, резко медиатором. Каждый синтезируем один раз
+  const soft = force < .25 ? 3 : force < .6 ? 1 : 0;
+  const key = freq.toFixed(2) + "-" + soft;
+  if (!buffers.has(key)) buffers.set(key, makePluck(freq, .4985, soft));
   const t = audio.currentTime + delayMs / 1000;
   // струна не звучит двумя голосами сразу: прошлый звук глушим, как пальцем
   if (s.voice) {
-    s.voice.gain.gain.setTargetAtTime(0, t, .015);
+    const g = s.voice.gain.gain;
+    if (g.cancelAndHoldAtTime) g.cancelAndHoldAtTime(t); else g.cancelScheduledValues(t);
+    g.setTargetAtTime(0, t, .015);
     s.voice.src.stop(t + .12);
   }
   const src = audio.createBufferSource(), tone = audio.createBiquadFilter(), gain = audio.createGain();
   src.buffer = buffers.get(key);
   tone.type = "lowpass";
-  tone.frequency.value = 700 + force * 6000;        // резкий щипок звонче, мягкий глуше
-  gain.gain.value = .03 + Math.pow(force, 1.4) * .45; // еле задел - тихо, махнул - громко
+  tone.frequency.value = 600 + force * 6000;          // резкий щипок звонче, мягкий глуше
+  const peak = .03 + Math.pow(force, 1.4) * .45;      // еле задел - тихо, махнул - громко
+  const attack = .002 + (1 - force) * .03;            // мягкое касание нарастает, резкое щёлкает сразу
+  // затухание как у настоящей гитары: басы тянутся дольше, верхние струны гаснут быстрее
+  const decay = 1.25 * Math.pow(82.41 / freq, .35);
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(peak, t + attack);
+  gain.gain.setTargetAtTime(0, t + attack, decay);
   src.connect(tone).connect(gain).connect(master);
   src.start(t);
   s.voice = { src, gain };
@@ -382,9 +401,12 @@ listenBtn.addEventListener("click", () => {
     if (!buffers.has(key)) buffers.set(key, makePluck(f, damp));
     const src = audio.createBufferSource(), gain = audio.createGain();
     src.buffer = buffers.get(key);
-    gain.gain.value = cfg.shape === "dread" ? .22 : cfg.shape === "parlor" ? .15 : .18;
+    const t0 = audio.currentTime + i * .035;
+    gain.gain.setValueAtTime(cfg.shape === "dread" ? .22 : cfg.shape === "parlor" ? .15 : .18, t0);
+    // большой корпус звенит дольше, маленький гаснет быстрее
+    gain.gain.setTargetAtTime(0, t0 + .05, cfg.shape === "dread" ? 1.6 : cfg.shape === "parlor" ? .9 : 1.2);
     src.connect(gain).connect(analyser);
-    src.start(audio.currentTime + i * .035);
+    src.start(t0);
   });
   listenBtn.classList.add("playing");
   const wasIdle = performance.now() >= scopeUntil;

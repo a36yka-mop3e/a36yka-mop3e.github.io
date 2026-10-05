@@ -228,12 +228,19 @@ if (!reduced) {
     scene.add(h, rf); n++;
   }
 
-  // облака: мягкие пятна на уровне гребня, медленно плывут
-  const cc = document.createElement("canvas"); cc.width = cc.height = 128;
-  const cx = cc.getContext("2d"), grd = cx.createRadialGradient(64, 64, 0, 64, 64, 64);
-  grd.addColorStop(0, "rgba(255,255,255,1)"); grd.addColorStop(1, "rgba(255,255,255,0)");
-  cx.fillStyle = grd; cx.fillRect(0, 0, 128, 128);
-  const cloudTex = new THREE.CanvasTexture(cc);
+  // облака: мягкие пятна на уровне гребня, медленно плывут.
+  // Пятно считаем сами в массив: картинка из <canvas> на айфонах приезжала в 3D цветной рябью
+  const CS = 128, cdata = new Uint8Array(CS * CS * 4);
+  for (let y = 0; y < CS; y++) for (let x = 0; x < CS; x++) {
+    const i = (y * CS + x) * 4, r = Math.hypot(x + .5 - CS / 2, y + .5 - CS / 2) / (CS / 2);
+    cdata[i] = cdata[i + 1] = cdata[i + 2] = 255;
+    cdata[i + 3] = Math.max(0, 1 - r) * 255;
+  }
+  const cloudTex = new THREE.DataTexture(cdata, CS, CS);
+  cloudTex.magFilter = THREE.LinearFilter;
+  cloudTex.minFilter = THREE.LinearMipmapLinearFilter;
+  cloudTex.generateMipmaps = true;
+  cloudTex.needsUpdate = true;
   const clouds = [];
   for (let i = 0; i < 14; i++) {
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex, transparent: true, opacity: .55 + hash(i, 3) * .3, depthWrite: false }));

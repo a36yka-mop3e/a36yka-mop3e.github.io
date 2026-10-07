@@ -281,6 +281,27 @@ main { position: relative; z-index: 1; }
   linear-gradient(var(--ink), var(--ink)) right 6px bottom 6px / 5px 5px no-repeat; flex: none; }
 .m-exe { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 9px; color: var(--ink); }
 .m-exe::before { content: ''; width: 12px; height: 12px; border-radius: 3px; background: var(--accent); }
+.m-chip--on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.m-tabs { display: flex; gap: 4px; margin-left: auto; }
+.m-tabs > span { font-size: 7.5px; padding: 2px 6px; border-radius: 999px; border: 1px solid var(--line); color: var(--stone); line-height: 1.2; white-space: nowrap; }
+.m-tabs > .on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.m-cars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.m-car { border: 1px solid var(--line); border-radius: 6px; padding: 4px; display: grid; gap: 4px; }
+.m-car > span:first-child { height: 30px; border-radius: 4px; background: var(--paper-2); }
+.m-car em { font-style: normal; font-family: var(--mono); font-size: 7px; color: var(--ok); }
+.m-car em.way { color: var(--accent-text); }
+.m-panel { position: absolute; left: -14px; bottom: -14px; width: 44%; background: var(--ink); color: var(--paper); border-radius: 10px; padding: 8px 10px; font-size: 8px; display: grid; gap: 4px; box-shadow: 0 12px 20px -10px rgba(0, 0, 0, .5); }
+.m-panel b { font-family: var(--mono); font-size: 7.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); }
+.m-panel div { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.m-panel div span:last-child:not(.m-line) { color: var(--ok); font-family: var(--mono); font-size: 7.5px; }
+.m-search { height: 18px; border: 1.5px solid var(--ink); border-radius: 6px; display: flex; align-items: center; gap: 5px; padding: 0 7px; font-size: 8px; color: var(--stone); }
+.m-search::before { content: ''; width: 5px; height: 5px; border: 1.5px solid var(--stone); border-radius: 50%; flex: none; }
+.m-split { height: 50px; border-radius: 6px; display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; position: relative; border: 1px solid var(--line); }
+.m-split > span { font-family: var(--mono); font-size: 7.5px; padding: 4px 6px; color: var(--stone); background: var(--paper-2); }
+.m-split > span + span { background: linear-gradient(135deg, var(--accent-tint), var(--accent)); color: var(--on-accent); text-align: right; }
+.m-split::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--white); }
+.m-shot { margin-left: auto; width: 58%; height: 30px; border-radius: 8px; background: var(--accent-tint); border: 1px solid var(--accent); font-family: var(--mono); font-size: 7.5px; display: grid; place-items: center; color: var(--accent-text); }
+.m-coupon { width: 72%; border: 1.5px dashed var(--accent); border-radius: 8px; padding: 6px; font-family: var(--display); font-weight: 700; font-size: 10px; letter-spacing: .08em; display: grid; gap: 4px; justify-items: center; background: var(--white); color: var(--ink); }
 /* каркасное состояние: те же элементы, но пунктиром и без текста */
 .mock--wire { box-shadow: none; }
 .mock--wire .m-line, .mock--wire .m-hero, .mock--wire .m-card, .mock--wire .m-bubble, .mock--wire .m-chip, .mock--wire .m-btn, .mock--wire .m-gantt > span, .mock--wire .m-file, .mock--wire .m-qr, .mock--wire .m-exe::before { background: transparent !important; border: 1.5px dashed var(--line) !important; color: transparent !important; box-shadow: none !important; }
@@ -332,6 +353,26 @@ main { position: relative; z-index: 1; }
 .case p { font-size: 14.5px; color: var(--ink-2); }
 .case-result { margin-top: auto; padding-top: 12px; border-top: 1px dashed var(--line); font-size: 14px; color: var(--ink-2); }
 .case-result b { color: var(--accent-text); font-weight: 600; }
+/* главная работа во всю ширину: макет слева, текст справа */
+.case--wide { grid-column: 1 / -1; display: grid; grid-template-columns: 1.1fr 1fr; }
+.case--wide .case-visual { aspect-ratio: auto; min-height: 340px; padding: 32px 40px; border-bottom: 0; border-right: 1px solid var(--line); }
+.case--wide .case-visual .mock--browser { width: 100%; max-width: 400px; }
+@media (min-width: 1100px) { .case--wide .case-visual .mock--browser { transform: scale(1.3); } }
+.case--wide .case-body { padding: clamp(24px, 3.4vw, 44px); justify-content: center; gap: 14px; }
+.case--wide h3 { font-size: clamp(1.3rem, 2.1vw, 1.7rem); }
+.case--wide p { font-size: 15.5px; }
+.case--wide .case-result { margin-top: 6px; }
+@media (max-width: 760px) {
+  .case--wide { grid-template-columns: 1fr; }
+  .case--wide .case-visual { aspect-ratio: 16 / 10; min-height: 0; padding: 16px 24px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .case--wide .case-visual .mock--browser { width: 74%; transform: none; }
+}
+/* работа на две колонки: два телефона рядом */
+.case--duo { grid-column: span 2; }
+.case--duo .case-visual { aspect-ratio: 32 / 10; }
+@media (max-width: 640px) { .case--duo { grid-column: auto; } .case--duo .case-visual { aspect-ratio: auto; } }
+.m-pair { display: flex; gap: 18px; justify-content: center; align-items: center; width: 100%; }
+.case-visual .m-pair .mock--phone { width: 40%; max-width: 150px; }
 /* живые демо: ряд из трёх над работами для клиентов */
 .demos-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; margin-bottom: 18px; }
 .demos-note { font-size: 14.5px; color: var(--ink-2); max-width: 560px; }
@@ -368,10 +409,14 @@ main { position: relative; z-index: 1; }
 .quotes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px; }
 @media (max-width: 1000px) { .quotes { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 640px) { .quotes { grid-template-columns: 1fr; } }
-.quote { background: var(--white); border-radius: var(--radius); border: 1px solid var(--line); padding: 24px; font-size: 1rem; line-height: 1.5; display: flex; flex-direction: column; }
+.quote { margin: 0; background: var(--white); border-radius: var(--radius); border: 1px solid var(--line); padding: 24px; font-size: 1rem; line-height: 1.5; display: flex; flex-direction: column; }
 .quote footer { margin-top: auto; padding-top: 14px; }
 .quote::before { content: '“'; display: block; font-family: var(--display); font-size: 2.2rem; line-height: .6; color: var(--accent); margin-bottom: 14px; }
 .quote footer { margin-top: 14px; font-family: var(--mono); font-size: 12px; color: var(--stone); }
+/* главный отзыв: чёрный блок во всю ширину */
+.quote--wide { grid-column: 1 / -1; background: var(--ink); border-color: var(--ink); color: var(--paper); padding: clamp(28px, 3.6vw, 48px); font-size: clamp(1.05rem, 1.5vw, 1.25rem); line-height: 1.55; }
+.quote--wide::before { font-size: 3rem; }
+.quote--wide footer { color: color-mix(in srgb, var(--paper) 60%, transparent); padding-top: 20px; }
 
 /* ---------- как работаем ---------- */
 .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; counter-reset: step; }
@@ -734,6 +779,84 @@ main { position: relative; z-index: 1; }
       <p class="eyebrow cases-label reveal">Работы для клиентов</p>
       <div class="cases stagger">
 
+        <article class="case case--wide" data-kind="site">
+          <div class="case-visual">
+            <div class="mock mock--browser">
+              <div class="m-row"><span class="m-line m-line--ink w25"></span><span class="m-tabs"><span class="on">в наличии</span><span>в пути</span><span>привезли</span></span></div>
+              <div class="m-hero mt8"><span class="m-line w45"></span><span class="m-btn"></span></div>
+              <div class="m-cars mt8">
+                <div class="m-car"><span></span><span class="m-line w80"></span><em>в наличии</em></div>
+                <div class="m-car"><span></span><span class="m-line w60"></span><em class="way">в пути</em></div>
+                <div class="m-car"><span></span><span class="m-line w80"></span><em>в наличии</em></div>
+              </div>
+              <div class="m-panel">
+                <b>растаможка</b>
+                <div><span>курс цб</span><span>сам</span></div>
+                <div><span>утильсбор</span><span>сам</span></div>
+                <div><span>итого</span><span class="m-line m-line--accent w45"></span></div>
+              </div>
+              <div class="m-file">лоты аукционов · онлайн</div>
+            </div>
+          </div>
+          <div class="case-body">
+            <span class="case-tag">сайт · авто из японии под ключ, владивосток</span>
+            <h3>Сайт с живыми лотами японских аукционов</h3>
+            <p>Каталог машин в наличии, в пути и уже привезённых. Калькулятор растаможки сам подтягивает курс ЦБ и считает утильсбор, отдельно для санкционных моделей. Лоты аукционов приходят на сайт сами, при сдаче их было больше 25 тысяч. Заявки летят в телеграм и в админку.</p>
+            <p>К сайту инструкция на 9 страниц, чтобы вести его без программиста.</p>
+            <p class="case-result"><b>Итог:</b> сдан раньше срока, главная открывается за 0,3 секунды.</p>
+          </div>
+        </article>
+
+        <article class="case case--duo" data-kind="bot">
+          <div class="case-visual">
+            <div class="m-pair">
+              <div class="mock mock--phone">
+                <div class="m-stack">
+                  <span class="m-bubble m-bubble--in">Кому задать вопрос?</span>
+                  <div class="m-chips"><span class="m-chip">Спикер 1</span><span class="m-chip">Спикер 2</span><span class="m-chip">Спикер 3</span></div>
+                  <span class="m-bubble m-bubble--out">Спикер 2</span>
+                  <span class="m-bubble m-bubble--in">Вопрос ушёл спикеру в личку, копия у организаторов</span>
+                </div>
+              </div>
+              <div class="mock mock--phone">
+                <div class="m-stack">
+                  <span class="m-bubble m-bubble--in">Пришлите скрин билета</span>
+                  <span class="m-shot">билет.jpg</span>
+                  <span class="m-bubble m-bubble--in">Админ одобрил, держите купон</span>
+                  <span class="m-coupon">КУПОН<span class="m-line m-line--accent w60"></span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="case-body">
+            <span class="case-tag">боты и сайт · выставка медиапроизводства, москва</span>
+            <h3>Два бота и страница партнёров для выставки</h3>
+            <p>Первый бот передаёт вопросы гостей выбранному спикеру в личку, организаторы видят копию. Второй раздаёт скидки партнёров: гость присылает скрин билета, админ одобряет, бот отправляет купон картинкой. На сайте выставки сделал страницу партнёров, новых организаторы добавляют сами в админке.</p>
+            <p class="case-result"><b>Итог:</b> пять задач подряд от одного клиента: страница партнёров, копия посадочной, форма аккредитации СМИ и два бота.</p>
+          </div>
+        </article>
+
+        <article class="case" data-kind="site">
+          <div class="case-visual">
+            <div class="mock mock--browser">
+              <div class="m-row"><span class="m-line m-line--ink w25"></span><span class="m-line w15 ml-auto"></span><span class="m-line m-line--accent w15"></span></div>
+              <div class="m-search mt8">город, улица</div>
+              <div class="m-list mt8">
+                <div><b>Пункт выдачи Ozon</b><i>выбрать</i></div>
+                <div><b>Пункт выдачи Ozon</b><i>выбрать</i></div>
+                <div><span class="m-line w45"></span><i>выбрать</i></div>
+              </div>
+              <div class="m-file">заказ передан в Ozon</div>
+            </div>
+          </div>
+          <div class="case-body">
+            <span class="case-tag">сайт · магазин косметики</span>
+            <h3>Доставка Ozon прямо в корзине магазина</h3>
+            <p>Плагин для woocommerce: покупатель ищет пункт выдачи по городу и улице среди 53 тысяч точек, цена доставки считается по тарифам Ozon. Оплаченный заказ сам уходит в Ozon, этикетка и отмена - кнопками в карточке заказа.</p>
+            <p class="case-result"><b>Итог:</b> сделан за один день, проверен живым заказом.</p>
+          </div>
+        </article>
+
         <article class="case" data-kind="site">
           <div class="case-visual">
             <div class="mock mock--browser">
@@ -750,7 +873,7 @@ main { position: relative; z-index: 1; }
             <span class="case-tag">сайт · производство, санкт-петербург</span>
             <h3>Сайт вакансий за два дня</h3>
             <p>Семь вакансий с карточками, две формы отклика, политика, метрика с целями под рекламу. Собран на коде, потом по просьбе клиента перенесён в их конструктор без потери вида.</p>
-            <p class="case-result"><b>Итог:</b> отклики идут на почту. Это второй заказ от того же клиента.</p>
+            <p class="case-result"><b>Итог:</b> отклики идут на почту. Клиент постоянный: потом был ещё лендинг индустриального парка с заявками в crm.</p>
           </div>
         </article>
 
@@ -793,6 +916,63 @@ main { position: relative; z-index: 1; }
             <h3>Выгрузка чеков из кассы для контроля кассиров</h3>
             <p>Старая программа перестала запускаться после обновления. Починил, добавил время открытия чека и период «последние N месяцев», собрал в один exe: запуск двойным кликом прямо на кассе.</p>
             <p class="case-result"><b>Итог:</b> 8&nbsp;498 строк сверены со старой выгрузкой, ноль расхождений. Второй заказ через два дня.</p>
+          </div>
+        </article>
+
+        <article class="case" data-kind="bot">
+          <div class="case-visual">
+            <div class="mock mock--phone">
+              <div class="m-stack">
+                <span class="m-bubble m-bubble--in">Старт продаж нового корпуса, планировки во вложении</span>
+                <div class="m-chips"><span class="m-chip m-chip--on">Квартиры</span><span class="m-chip">Дома</span><span class="m-chip">Коммерция</span><span class="m-chip">Крым</span></div>
+                <span class="m-bubble m-bubble--out">Переслано в чат «Квартиры» с подписью застройщика</span>
+              </div>
+            </div>
+          </div>
+          <div class="case-body">
+            <span class="case-tag">бот · агентство недвижимости, краснодар</span>
+            <h3>Бот в MAX, который раскладывает новостройки по чатам</h3>
+            <p>Застройщики пишут о новых квартирах в свои чаты. Бот забирает новые сообщения и пересылает их в нужный чат агентства: квартиры, дома, коммерция или Крым, с подписью, от какого застройщика.</p>
+            <p class="case-result"><b>Итог:</b> подключено 19 застройщиков, новых добавляю по запросу.</p>
+          </div>
+        </article>
+
+        <article class="case" data-kind="site">
+          <div class="case-visual">
+            <div class="mock mock--browser">
+              <div class="m-row"><span class="m-line m-line--ink w25"></span><span class="m-line w15 ml-auto"></span><span class="m-line w15"></span></div>
+              <div class="m-split mt8"><span>до</span><span>после</span></div>
+              <div class="m-cards mt8"><span class="m-card"></span><span class="m-card"></span><span class="m-card"></span></div>
+              <div class="m-file">инструкция.pdf · 10 стр</div>
+            </div>
+          </div>
+          <div class="case-body">
+            <span class="case-tag">сайт · визуализация ювелирных украшений</span>
+            <h3>Переезд сайта-портфолио на wordpress</h3>
+            <p>Одностраничник переехал с конструктора на wordpress со своей темой: вид тот же, а тексты и фото владелица теперь меняет сама. Добавил просмотр фото по клику, видео в каруселях, параллакс и новый блок «до и после», подключил домен, https и почту.</p>
+            <p class="case-result"><b>Итог:</b> перенос за несколько часов, к сдаче инструкция на 10 страниц.</p>
+          </div>
+        </article>
+
+        <article class="case" data-kind="app">
+          <div class="case-visual">
+            <div class="mock mock--window">
+              <div class="m-row"><span class="m-exe">контакты по инн</span><span class="m-line w25 ml-auto"></span></div>
+              <div class="m-table mt8">
+                <span class="th">инн</span><span class="th">сайт</span><span class="th">телефон</span>
+                <span>63••••••••</span><span class="ok">найден</span><span>+7 846 •••</span>
+                <span>63••••••••</span><span class="ok">найден</span><span>+7 846 •••</span>
+                <span>63••••••••</span><span>проверить</span><span>-</span>
+                <span>63••••••••</span><span class="ok">найден</span><span>+7 846 •••</span>
+              </div>
+              <div class="m-file">контакты.xlsx · 130 строк</div>
+            </div>
+          </div>
+          <div class="case-body">
+            <span class="case-tag">парсер · производители жби, самара</span>
+            <h3>Телефоны и почты компаний по списку ИНН</h3>
+            <p>По названию и ИНН программа находит сайт компании и берёт телефон и почту прямо оттуда, а не из устаревших справочников. Где сайт не подтвердился, строка помечена, чтобы не звонить вслепую.</p>
+            <p class="case-result"><b>Итог:</b> 130 действующих организаций. Заказчик сверил с теми, кого знает сам: все нашлись.</p>
           </div>
         </article>
 
@@ -933,21 +1113,37 @@ main { position: relative; z-index: 1; }
       </div>
 
       <div class="quotes-head reveal">
-        <p class="eyebrow">Отзывы · 5,0 из 5 на профи.ру</p>
+        <p class="eyebrow">Отзывы</p>
         <a class="link-btn" href="https://profi.ru/profile/AlekseevRK/#reviews-tab" target="_blank" rel="noopener">Все отзывы на профи.ру</a>
       </div>
       <div class="quotes stagger">
+        <blockquote class="quote quote--wide">
+          Роман создал прекрасный сайт для нашей компании по привозу автомобилей из Азии. Всё выполнено качественно и с учётом наших пожеланий. Отдельно хочется отметить помощь в разборе вопросов, связанных с аукционами и ставками: на все вопросы отвечает подробно, понятно и доступным языком. Работа выполнена очень оперативно, даже раньше оговорённого срока.
+          <footer>Юлия · сайт компании по привозу авто</footer>
+        </blockquote>
+        <blockquote class="quote">
+          Оперативно, буквально за несколько часов, сделал работу, все правки вносились по моей просьбе также оперативно и без навязывания услуг! Помог разобраться во внутренней системе нового сайта. Очень адекватная стоимость! Рекомендую 100%
+          <footer>Наташа · перенос сайта на wordpress</footer>
+        </blockquote>
         <blockquote class="quote">
           Всё сделал супербыстро и при этом очень качественно, сайт выглядит стильно и современно. Всегда был на связи, отвечал моментально. Обязательно обратимся снова.
           <footer>Марина · лендинг и доработка сайта</footer>
+        </blockquote>
+        <blockquote class="quote">
+          очень быстро. красавчик. сразу понял что надо и баги подчистил.
+          <footer>Артур · программа для кассы</footer>
+        </blockquote>
+        <blockquote class="quote">
+          Быстро понял, что нужно делать, вник в проблему, сразу сказал, что будем исправлять и сколько потребуется времени. Высокое качество работы, приятное общение, быстро и чётко.
+          <footer>Галина · доставка Ozon для магазина</footer>
         </blockquote>
         <blockquote class="quote">
           Выслушал все пожелания и предложил удобные решения. Объяснил всё очень доходчиво, всегда был на связи, оперативно вносил изменения. Работать было легко и приятно.
           <footer>Александра · бот в MAX для салона</footer>
         </blockquote>
         <blockquote class="quote">
-          очень быстро. красавчик. сразу понял что надо и баги подчистил.
-          <footer>Артур · программа для кассы</footer>
+          Отличная работа, оперативно, всё объяснил и починил. Рекомендую
+          <footer>Жанна · правка корзины на тильде</footer>
         </blockquote>
         <blockquote class="quote">
           Всё сделали очень быстро, при этом результат получился стильным и продуманным. Учёл все пожелания и довёл дело до идеального результата.
@@ -1330,7 +1526,8 @@ main { position: relative; z-index: 1; }
       es.forEach(function (e) {
         if (e.isIntersecting) { e.target.classList.add('is-in'); rio.unobserve(e.target); }
       });
-    }, { threshold: .1, rootMargin: '0px 0px -6% 0px' });
+    /* порог 0, а не доля высоты: блок работ на телефоне выше экрана в разы, и 10% его высоты в кадр не влезают */
+    }, { threshold: 0, rootMargin: '0px 0px -6% 0px' });
     $$('.reveal, .stagger').forEach(function (n) { rio.observe(n); });
   } else {
     $$('.reveal, .stagger').forEach(function (n) { n.classList.add('is-in'); });
@@ -1512,7 +1709,8 @@ main { position: relative; z-index: 1; }
     doc.addEventListener('visibilitychange', function () { if (doc.hidden) releaseAll(); });
     doc.addEventListener('keydown', function (e) { if (e.key === 'Escape') releaseAll(); });
     $$('.case, .demo, .svc, .quote, .chat, .honest-col, .ready').forEach(function (card) {
-      var wide = card.classList.contains('ready') || card.classList.contains('honest-col') || card.classList.contains('chat');
+      var wide = card.classList.contains('ready') || card.classList.contains('honest-col') || card.classList.contains('chat') ||
+        card.classList.contains('case--wide') || card.classList.contains('case--duo') || card.classList.contains('quote--wide');
       var max = wide ? 3 : 6;
       var feel = wide ? HEAVY : LIGHT;
       function damp(d) { return d * feel.stretch / (feel.stretch + Math.abs(d)); }
